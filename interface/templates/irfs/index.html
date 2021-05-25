@@ -1,0 +1,57 @@
+{% extends 'irfs/base.html' %}
+
+{% block content%}
+
+    <h2>Check mileage of you Car Instantly</h2>
+
+    <h3>Please enter details:</h3>
+    <br>
+    {%  if scoreval  %}
+    <form method="post" enctype="multipart/form-data" action="updateDataBase">
+    {% else %}
+    <form method="post" enctype="multipart/form-data" action="predictMPG">
+    {% endif%}
+ {% csrf_token %}
+  <div class="container">
+     <div class="col-md-4 col-sm-4"><label for="fname">DATE_OPER:</label> </div> <input name="dateoper" type="datetime-local" value={{temp.cylinders}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">REST_NEW:</label> </div> <input name="restnew" type="datetime-local" value={{temp.cylinders}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">DATE_OPEN:</label> </div> <input name="dateopen" type="datetime-local" value={{temp.cylinders}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">DATE_PLANCLOSE:</label> </div> <input name="dateplancode" type="datetime-local" value={{temp.cylinders}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">DATEOFBIRTH:</label> </div> <input name="dateofbirth" type="datetime-local" value={{temp.cylinders}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">OVERDUEDAY:</label> </div> <input type="text" id="fname" name="overdueday" value={{temp.horsepower}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">INTEREST_OVERDUEDAY:</label> </div> <input type="text" id="lname" name="interestoverdueday" value={{temp.weight}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">SUMMAAZN:</label></div>  <input type="text" id="fname" name="summaazn" value={{temp.acceleration}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">SUMMA:</label> </div> <input type="text" id="lname" name="summa" value={{temp.model_year}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">SUMMA_19AZN:</label> </div> <input type="text" id="lname" name="summa19azn" value={{temp.origin}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">SUMMA_19:</label> </div> <input type="text" id="fname" name="summa19" value={{temp.horsepower}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">PROCAZN:</label> </div> <input type="text" id="lname" name="procazn" value={{temp.weight}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">PROC:</label></div>  <input type="text" id="fname" name="proc" value={{temp.acceleration}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">PROCPROSAZN:</label> </div> <input type="text" id="lname" name="procprosazn" value={{temp.model_year}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">PROCPROS:</label> </div> <input type="text" id="lname" name="procpros" value={{temp.origin}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">SUMMAKREAZN:</label> </div> <input type="text" id="fname" name="summakreazn" value={{temp.horsepower}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">SUMMAKRE:</label> </div> <input type="text" id="lname" name="summakre" value={{temp.weight}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">PROCSTAVKRE:</label></div>  <input type="text" id="fname" name="procstavkre" value={{temp.acceleration}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">KOD1:</label> </div> <input type="text" id="lname" name="kod1" value={{temp.model_year}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">LICSCHKRE:</label> </div> <input type="text" id="lname" name="licschkre" value={{temp.origin}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">subaccount:</label> </div> <input type="text" id="fname" name="subaccount" value={{temp.horsepower}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">cid:</label> </div> <input type="text" id="lname" name="cid" value={{temp.weight}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">pid:</label></div>  <input type="text" id="fname" name="pid" value={{temp.acceleration}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">plist:</label> </div> <input type="text" id="lname" name="plist" value={{temp.model_year}}><br><br>
+     <div class="col-md-4 col-sm-4"><label for="lname">wrof:</label> </div> <input type="text" id="lname" name="wrof" value={{temp.origin}}><br><br>
+ <br>
+  </div>
+ {%  if scoreval  %}
+ <h1>The mpg score is {{scoreval}}</h1>
+ <h3>If the response is good. Do you want to save it in DB?
+ </h3>
+ <input type="hidden" id="lname" name="mpgVal" value={{scoreval}}>
+ <input type="submit" value="Submit" ></div>
+ {% else %}
+ <input type="submit" value="Submit" ></div>
+ {% endif %}
+
+</form>
+<br>
+
+
+{% endblock %}
