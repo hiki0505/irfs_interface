@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-
+from .script import IRFS
 # import pandas as pd
 
 FEATURES = ['DATE_OPER', 'REST_NEW', 'DATE_OPEN', 'DATE_PLANCLOSE', 'DATEOFBIRTH', 'OVERDUEDAY',
@@ -31,7 +31,6 @@ def index(request):
 
 def predictMPG(request):
     if request.method == 'POST':
-
         values = [
             request.POST.get(value)
             for value in request.POST
@@ -39,9 +38,10 @@ def predictMPG(request):
         ]
 
         temp = dict(zip(FEATURES, values))
-        print(temp)
-
+        # print(temp)
+        result = IRFS.fake_score(temp, FEATURES)
     # testDtaa = pd.DataFrame({'x': temp}).transpose()
     # scoreval = reloadModel.predict(testDtaa)[0]
     # context = {'scoreval': scoreval, 'temp': temp}
-    return render(request, 'irfs/index.html', context={})
+    context = {'result': result}
+    return render(request, 'irfs/index.html', context=context)
