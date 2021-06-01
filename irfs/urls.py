@@ -8,5 +8,6 @@ from interface import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     url('^$', views.homepage, name='homepage'),
-    url('general', views.general, name='general')
+    url('general', views.general, name='general'),
+    url('predict', views.predictMPG, name='predictMPG')
 ]
