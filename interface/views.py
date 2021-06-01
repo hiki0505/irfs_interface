@@ -8,8 +8,8 @@ def homepage(request):
     # return HttpResponse()
 
 
-def index(request):
-    return render(request, 'irfs/index.html')
+def general(request):
+    return render(request, 'irfs/general.html')
 
 
 def predictMPG(request):
@@ -48,4 +48,4 @@ def predictMPG(request):
     testDtaa = pd.DataFrame({'x': temp2}).transpose()
     scoreval = reloadModel.predict(testDtaa)[0]
     context = {'scoreval': scoreval, 'temp': temp}
-    return render(request, 'irfs/index.html', context)
+    return render(request, 'irfs/general.html', context)

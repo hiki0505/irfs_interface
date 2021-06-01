@@ -8,5 +8,5 @@ from interface import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     url('^$', views.homepage, name='homepage'),
-    url('index', views.index, name='index')
+    url('general', views.general, name='general')
 ]
