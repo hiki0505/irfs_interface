@@ -1,0 +1,43 @@
+{% extends 'irfs/base.html' %}
+
+{% block content%}
+
+    <h2>DATABASE CONNECTION FORM:</h2>
+
+    <h3>Please enter your database credentials:</h3>
+    <br>
+<!--    {%  if scoreval  %}-->
+<!--    <form method="post" enctype="multipart/form-data" action="updateDataBase">-->
+<!--    {% else %}-->
+    <form method="post" enctype="multipart/form-data" action="dbconn_view">
+<!--    {% endif%}-->
+ {% csrf_token %}
+  <div class="container" style="
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 10px 2em;">
+     <div class="col-md-4 col-sm-4"><label for="fname">engine:</label> </div> <input name="engine" type="text"><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">username:</label> </div> <input name="username" type="text"><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">password:</label> </div> <input name="password" type="text"><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">host/server:</label> </div> <input name="host" type="text"><br><br>
+     <div class="col-md-4 col-sm-4"><label for="fname">database:</label> </div> <input name="dbname" type="text"><br><br>
+    <br>
+  </div>
+<!-- {%  if scoreval  %}-->
+<!-- <h1>The mpg score is {{scoreval}}</h1>-->
+<!-- <h3>If the response is good. Do you want to save it in DB?-->
+<!-- </h3>-->
+<!-- <input type="hidden" id="lname" name="mpgVal" value={{scoreval}}>-->
+<!-- <input type="submit" value="Submit" ></div>-->
+<!-- {% else %}-->
+<!-- <input type="submit" value="Submit" ></div>-->
+<!-- {% endif %}-->
+<input type="submit" value="Submit" ></div>
+
+</form>
+<br>
+
+<h1>The data: {{ conn.fetchall }}</h1>
+
+
+{% endblock %}

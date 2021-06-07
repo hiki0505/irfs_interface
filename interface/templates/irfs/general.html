@@ -12,7 +12,10 @@
     <form method="post" enctype="multipart/form-data" action="predictMPG">
 <!--    {% endif%}-->
  {% csrf_token %}
-  <div class="container">
+  <div class="container" style="
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 10px 2em;">
      <div class="col-md-4 col-sm-4"><label for="fname">repd:</label> </div> <input name="dateoper" type="text" value=5><br><br>
      <div class="col-md-4 col-sm-4"><label for="fname">resd:</label> </div> <input name="restnew" type="text" value=2><br><br>
      <div class="col-md-4 col-sm-4"><label for="fname">st_date:</label> </div> <input name="dateopen" type="text" value=8><br><br>

@@ -9,5 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url('^$', views.homepage, name='homepage'),
     url('general', views.general, name='general'),
-    url('predict', views.predictMPG, name='predictMPG')
+    url('predict', views.predictMPG, name='predictMPG'),
+    url('connect', views.connect, name='connect'),
+    url('dbconn_view', views.dbconn_view, name='dbconn_view')
 ]

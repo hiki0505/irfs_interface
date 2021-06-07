@@ -82,6 +82,7 @@ DATABASES = {
     }
 }
 
+# SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
