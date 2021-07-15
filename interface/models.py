@@ -1,81 +1,95 @@
 from django.core.validators import int_list_validator, validate_comma_separated_integer_list
 from django.db import models
 
+
 # class PList(models.Model):
 #     prod_id = models.CommaSeparatedIntegerField
 
-class Irfs(models.Model):
-    repd = models.DateTimeField(verbose_name='DATE_OPER', help_text='report date for the portfolio')
-    resd = models.DateTimeField(verbose_name='REST_NEW', help_text='date of restructuring')
-    st_date = models.DateTimeField(verbose_name='DATE_OPEN', help_text='loan origination date')
-    end_date = models.DateTimeField(verbose_name='DATE_PLANCLOSE', help_text='contractual loan maturity date')
-    bthday = models.DateTimeField(verbose_name='DATEOFBIRTH', help_text='date of birth')
-
-    dp = models.IntegerField(verbose_name='OVERDUEDAY', help_text='days principal is past due')
-    di = models.IntegerField(verbose_name='INTEREST_OVERDUEDAY', help_text='days interest is past due')
-
-    anp_m = models.DecimalField(verbose_name='SUMMAAZN', help_text='normal principal amount in manats',
-                                max_digits=19,
-                                decimal_places=10)
-    anp_c = models.DecimalField(verbose_name='SUMMA', help_text='normal principal amount in currency',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-    aop_m = models.DecimalField(verbose_name='SUMMA_19AZN', help_text='overdue principal amount in manats',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-    aop_c = models.DecimalField(verbose_name='SUMMA_19', help_text='overdue principal amount in currency',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-
-    ani_m = models.DecimalField(verbose_name='PROCAZN', help_text='normal interest amount in manats',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-    ani_c = models.DecimalField(verbose_name='PROC', help_text='normal interest amount in currency',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-    aoi_m = models.DecimalField(verbose_name='PROCPROSAZN', help_text='overdue interest amount in manats',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-    aoi_c = models.DecimalField(verbose_name='PROCPROS', help_text='overdue interest amount in currency',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-
-    # total_outstanding = ?
-    aor_m = models.DecimalField(verbose_name='SUMMAKREAZN', help_text='original amount in manats',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-    aor_c = models.DecimalField(verbose_name='SUMMAKRE', help_text='original amount in currency',
-                                max_digits=19,
-                                decimal_places=10
-                                )
-
-    int_rate = models.DecimalField(verbose_name='PROCSTAVKRE', help_text='Interest rate',
-                                   max_digits=19,
-                                   decimal_places=10
-                                   )
-
-    id_l = models.IntegerField(verbose_name='KOD1', help_text='contract (loan) ID if any')
-    id_c = models.IntegerField(verbose_name='LICSCHKRE', help_text='client ID')
-    id_sub = models.IntegerField(help_text='subaccount (order of loan)')
+class DatabaseCredentials(models.Model):
+    ENGINE_CHOICES = (
+        ('postgres', 'postgres'),
+        ('pymysql', 'pymysql'),
+        ('pyodbc', 'pyodbc'),
+        ('oracle', 'oracle')
+    )
+    engine = models.CharField(default='postgres', max_length=50, choices=ENGINE_CHOICES)
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    host = models.CharField(max_length=255)
+    dbname = models.CharField(max_length=255)
 
 
-    # bid = "debt_standard_gl_acct_no" # balance account No
-    cid = models.IntegerField(verbose_name='KODVALUTI', help_text='currency ID (or name)')
-    pid = models.IntegerField(verbose_name='TIPKREDITA', help_text='product ID or name')
-
-    plist = models.CharField(validators=[validate_comma_separated_integer_list], max_length=50)
-    wrof = models.IntegerField(verbose_name='WROF', help_text='write-off status column')
-
-    class Meta:
-        db_table = "MF"
+# class Irfs(models.Model):
+#     DATE_OPER = models.DateTimeField(verbose_name='repd', help_text='report date for the portfolio')
+#     REST_NEW = models.DateTimeField(verbose_name='resd', help_text='date of restructuring')
+#     DATE_OPEN = models.DateTimeField(verbose_name='st_date', help_text='loan origination date')
+#     DATE_PLANCLOSE = models.DateTimeField(verbose_name='end_date', help_text='contractual loan maturity date')
+#     DATEOFBIRTH = models.DateTimeField(verbose_name='bthday', help_text='date of birth')
+#
+#     OVERDUEDAY = models.IntegerField(verbose_name='dp', help_text='days principal is past due')
+#     INTEREST_OVERDUEDAY = models.IntegerField(verbose_name='di', help_text='days interest is past due')
+#
+#     SUMMAAZN = models.DecimalField(verbose_name='anp_m', help_text='normal principal amount in manats',
+#                                    max_digits=19,
+#                                    decimal_places=10)
+#     SUMMA = models.DecimalField(verbose_name='anp_c', help_text='normal principal amount in currency',
+#                                 max_digits=19,
+#                                 decimal_places=10
+#                                 )
+#     SUMMA_19AZN = models.DecimalField(verbose_name='aop_m', help_text='overdue principal amount in manats',
+#                                       max_digits=19,
+#                                       decimal_places=10
+#                                       )
+#     SUMMA_19 = models.DecimalField(verbose_name='aop_c', help_text='overdue principal amount in currency',
+#                                    max_digits=19,
+#                                    decimal_places=10
+#                                    )
+#
+#     PROCAZN = models.DecimalField(verbose_name='ani_m', help_text='normal interest amount in manats',
+#                                   max_digits=19,
+#                                   decimal_places=10
+#                                   )
+#     PROC = models.DecimalField(verbose_name='ani_c', help_text='normal interest amount in currency',
+#                                max_digits=19,
+#                                decimal_places=10
+#                                )
+#     PROCPROSAZN = models.DecimalField(verbose_name='aoi_m', help_text='overdue interest amount in manats',
+#                                       max_digits=19,
+#                                       decimal_places=10
+#                                       )
+#     PROCPROS = models.DecimalField(verbose_name='aoi_c', help_text='overdue interest amount in currency',
+#                                    max_digits=19,
+#                                    decimal_places=10
+#                                    )
+#
+#     # total_outstanding = ?
+#     SUMMAKREAZN = models.DecimalField(verbose_name='aor_m', help_text='original amount in manats',
+#                                       max_digits=19,
+#                                       decimal_places=10
+#                                       )
+#     SUMMAKRE = models.DecimalField(verbose_name='aor_c', help_text='original amount in currency',
+#                                    max_digits=19,
+#                                    decimal_places=10
+#                                    )
+#
+#     PROCSTAVKRE = models.DecimalField(verbose_name='int_rate', help_text='Interest rate',
+#                                       max_digits=19,
+#                                       decimal_places=10
+#                                       )
+#
+#     KOD1 = models.IntegerField(verbose_name='id_l', help_text='contract (loan) ID if any')
+#     LICSCHKRE = models.IntegerField(verbose_name='id_c', help_text='client ID')
+#     id_sub = models.IntegerField(help_text='subaccount (order of loan)')
+#
+#     # bid = "debt_standard_gl_acct_no" # balance account No
+#     cid = models.IntegerField(verbose_name='KODVALUTI', help_text='currency ID (or name)')
+#     pid = models.IntegerField(verbose_name='TIPKREDITA', help_text='product ID or name')
+#
+#     plist = models.CharField(validators=[validate_comma_separated_integer_list], max_length=50)
+#     wrof = models.IntegerField(verbose_name='WROF', help_text='write-off status column')
+#
+#     class Meta:
+#         db_table = "MF"
 
     # STATUS_CHOICES = (
     #     (7, 'Low'),
