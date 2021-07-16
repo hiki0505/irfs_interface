@@ -8,13 +8,29 @@
 }
 
 .container {
-	width:90%;
-	margin: 0 auto;
-	font-weight: 800;
+  width: 90%;
+  margin: 0 auto;
+  font-weight: 900;
 }
 
 header {
-  background: #55d6aa;
+  background: #1abc9c;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1;
+}
+
+footer .container{
+  font-weight: 200;
+  font-size: 13px;
+}
+
+footer {
+  background: #d9e7e4;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
 }
 
 header::after {
@@ -26,6 +42,7 @@ header::after {
 .logo {
   float: left;
   padding: 10px 0;
+
 }
 
 .top {
@@ -75,9 +92,9 @@ header::after {
 }
 
 .btn{
-  position: absolute;
-  top: 80px;
-  left: 10px;
+  position: fixed;
+  top: 75px;
+  left: 5px;
   height: 45px;
   width: 45px;
   text-align: center;
@@ -86,8 +103,11 @@ header::after {
   cursor: pointer;
   transition: left 0.4s ease;
 }
+
 .btn.click{
-  left: 260px;
+  left: 255px;
+  top: 75px;
+  position: fixed;
 }
 .btn span{
   color: white;
@@ -101,6 +121,7 @@ header::after {
   position: fixed;
   width: 250px;
   height: 100%;
+  top: 70px;
   left: -250px;
   background: #1b1b1b;
   transition: left 0.4s ease;
@@ -114,10 +135,10 @@ header::after {
   font-weight: 600;
   line-height: 65px;
   text-align: center;
-  background: #1e1e1e;  
+  background: #1e1e1e;
   text-decoration: none;
   text-transform: uppercase;
-  
+
 }
 .sidebar ul{
   background: #1b1b1b;
@@ -126,7 +147,7 @@ header::after {
   list-style: none;
 }
 .sidebar ul li{
-  line-height: 60px;
+  line-height: 50px;
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 .sidebar ul li:last-child{
@@ -144,9 +165,9 @@ header::after {
   border-left: 3px solid transparent;
 }
 .sidebar ul li.active a{
-  color: #55d6aa;
+  color: #1abc9c;
   background: #1e1e1e;
-  border-left-color: #55d6aa;
+  border-left-color: #1abc9c;
 }
 .sidebar ul li a:hover{
   background: #1e1e1e;
@@ -176,7 +197,7 @@ header::after {
   border-left-color: transparent;
 }
 .sidebar ul ul li a:hover{
-  color: #55d6aa!important;
+  color: #1abc9c!important;
   background: #1e1e1e!important;
 }
 .sidebar ul li a span{
@@ -190,19 +211,19 @@ header::after {
 .sidebar ul li a span.rotate{
   transform: translateY(-50%) rotate(-180deg);
 }
+
 .content{
   display: contents;
-  position: absolute;
+  position: fixed;
   transform: translate(-50%,-50%);
   color: #202020;
   z-index: -1;
-  text-align: center;
+  text-align: left; /* accordion inside text*/
 }
+
+/*
 .content .header{
   font-size: 45px;
   font-weight: 600;
 }
-.content p{
-  font-size: 30px;
-  font-weight: 500;
-}
+*/

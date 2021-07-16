@@ -1,48 +1,242 @@
 {% extends 'irfs/base.html' %}
-
 {% block content%}
 
-    <h2>GENERAL MACROS</h2>
 
-    <h3>Please enter data:</h3>
-    <br>
 <!--    {%  if scoreval  %}-->
 <!--    <form method="post" enctype="multipart/form-data" action="updateDataBase">-->
 <!--    {% else %}-->
-    <form method="post" enctype="multipart/form-data" action="predictMPG">
-<!--    {% endif%}-->
- {% csrf_token %}
-  <div class="container" style="
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-gap: 10px 2em;">
-     <div class="col-md-4 col-sm-4"><label for="fname">repd:</label> </div> <input name="dateoper" type="text" value=5><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">resd:</label> </div> <input name="restnew" type="text" value=2><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">st_date:</label> </div> <input name="dateopen" type="text" value=8><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">end_date:</label> </div> <input name="dateplancode" type="text" value=10><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">bthday:</label> </div> <input name="dateofbirth" type="text" value=15><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">dp:</label> </div> <input type="text" id="fname" name="overdueday" value=11><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">di:</label> </div> <input type="text" id="lname" name="interestoverdueday" value=13><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">anp_m:</label></div>  <input type="text" id="fname" name="summaazn" value=16><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">anp_c:</label> </div> <input type="text" id="lname" name="summa" value=45><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">aop_m:</label> </div> <input type="text" id="lname" name="summa19azn" value=21><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">aop_c:</label> </div> <input type="text" id="fname" name="summa19" value=20><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">ani_m:</label> </div> <input type="text" id="lname" name="procazn" value=19><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">ani_c:</label></div>  <input type="text" id="fname" name="proc" value=11><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">aoi_m:</label> </div> <input type="text" id="lname" name="procprosazn" value=4><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">aoi_c:</label> </div> <input type="text" id="lname" name="procpros" value=8><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">aor_m:</label> </div> <input type="text" id="fname" name="summakreazn" value=9><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">aor_c:</label> </div> <input type="text" id="lname" name="summakre" value=12><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">int_rate:</label></div>  <input type="text" id="fname" name="procstavkre" value=17><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">id_l:</label> </div> <input type="text" id="lname" name="kod1" value=11><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">id_c:</label> </div> <input type="text" id="lname" name="licschkre" value=1><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">id_sub:</label> </div> <input type="text" id="fname" name="subaccount" value=3><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">cid:</label> </div> <input type="text" id="lname" name="cid" value=2><br><br>
-     <div class="col-md-4 col-sm-4"><label for="fname">pid:</label></div>  <input type="text" id="fname" name="pid" value=3><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">plist:</label> </div> <input type="text" id="lname" name="plist" value=11><br><br>
-     <div class="col-md-4 col-sm-4"><label for="lname">wrof:</label> </div> <input type="text" id="lname" name="wrof" value=17><br><br>
-    <br>
-  </div>
+
+    <div class="accordion-wrapper">
+
+	  <div class="accordion">
+		<input type="checkbox" name="radio-a" id="check2">
+		<label class="accordion-label" for="check2">CONNECTION PARAMETERS</label>
+		<div class="accordion-content">
+		  <form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="dbconn_view">
+			  {% csrf_token %}
+				<div class="Form-title">INPUT CONNECTION PARAMETERS:<br></div>
+			  		<div class="Database-section">
+                    <label for="oracle" class="radio">
+                        <input type="radio" name="db" id="oracle" class="radio__input">
+                        <div class="radio__radio"></div>
+                        Oracle
+                    </label>
+                    <label for="mysql" class="radio">
+                        <input type="radio" name="db" id="mysql" class="radio__input">
+                        <div class="radio__radio"></div>
+                        MySql
+                    </label>
+                    <label for="mssql" class="radio">
+                        <input type="radio" name="db" id="mssql" class="radio__input">
+                        <div class="radio__radio"></div>
+                        MsSql
+                    </label>
+                    <label for="postgresql" class="radio">
+                        <input type="radio" name="db" id="postgresql" class="radio__input">
+                        <div class="radio__radio"></div>
+                        PostgreSql
+                    </label>
+				</div>
+					<div class="Form-sections">
+						<div class="Form-section">
+							<div class="Form-field">
+								<label class="Form-label" for="host">Host | Server:</label>
+								<input class="Form-input" id="host" name="host" type="text">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="username">Username:</label>
+								<input class="Form-input" id="username" name="username" type="text">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="password">Password:</label>
+								<input class="Form-input" id="password" name="password" type="password">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="db_name">Database name | Service name:</label>
+								<input class="Form-input" id="db_name" name="db_name" type="text">
+							</div>
+							{% if error %}
+								{{ error }}
+								<br />
+								<br />
+							{% elif success %}
+								{{ success }}
+								<br />
+								<br />
+							{% endif %}
+						</div>
+					</div>
+					<div class="Form-buttonContainer">
+						<button class="Form-button">CONNECT</button>
+					</div>
+          </form>
+		</div>
+	  </div>
+
+<!--	  <div class="accordion">-->
+<!--		<input type="checkbox" name="radio-a" id="check3">-->
+<!--		<label class="accordion-label" for="check3">REPORT DATE</label>-->
+<!--		<div class="accordion-content">-->
+<!--		  <form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="predictMPG">-->
+<!--				<div class="Form-title">SELECT REPORT DATE:<br></div>-->
+<!--					<div class="Form-sections">-->
+<!--						<div class="Form-section">-->
+<!--							<div class="Form-field">-->
+<!--								<label class="Form-label" for="report_date">Report date:</label>-->
+<!--								<input class="Form-input" id="report_date" name="report_date " type="date">-->
+<!--							</div>-->
+<!--						</div>-->
+<!--					</div>-->
+<!--					<div class="Form-buttonContainer">-->
+<!--						<button class="Form-button">SUBMIT</button>-->
+<!--					</div>-->
+<!--          </form>-->
+<!--		</div>-->
+<!--	  </div>-->
+
+	  <div class="accordion">
+		<input type="checkbox" name="radio-a" id="check4">
+		<label class="accordion-label" for="check4">GENERAL MACRO</label>
+		<div class="accordion-content">
+			<form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="predictMPG">
+			  {% csrf_token %}
+				<div class="Form-title">INPUT TABLE PARAMETERS:<br></div>
+					<div class="Form-title">SELECT REPORT DATE:<br></div>
+					<div class="Form-sections">
+						<div class="Form-section">
+							<div class="Form-field">
+								<label class="Form-label" for="report_date_start">Report date start:</label>
+								<input class="Form-input" id="report_date_start" name="repd_start" type="date" value="2015-01-08">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="report_date_end">Report date end:</label>
+								<input class="Form-input" id="report_date_end" name="repd_end" type="date" value="2020-01-08">
+							</div>
+						</div>
+					</div>
+					<div class="Form-sections">
+						<div class="Form-section">
+							<div class="Form-field">
+								<label class="Form-label" for="repd">Report date for the portfolio:</label>
+								<input class="Form-input" id="repd" name="repd" type="text" value="ACT_DATE">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="resd">Date of restructuring:</label>
+								<input class="Form-input" id="resd" name="resd" type="text" value="DATE_REST">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="st_date">Loan origination date:</label>
+								<input class="Form-input" id="st_date" name="st_date" type="text" value="DATE_START">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="end_date">Contractual loan maturity date:</label>
+								<input class="Form-input" id="end_date" name="end_date" type="text" value="DATE_END_CONTRACT">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="bthday">Date of birth:</label>
+								<input class="Form-input" id="bthday" name="bthday" type="text" value="DATE_OF_BIRTH">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="dp">Days principal is past due:</label>
+								<input class="Form-input" id="dp" name="dp" type="text" value="ESAS_OVER_DAYS">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="di">Days interest is past due:</label>
+								<input class="Form-input" id="di" name="di" type="text" value="FAIZ_OVER_DAYS">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="anp_m">Normal principal amount in manats:</label>
+								<input class="Form-input" id="anp_m" name="anp_m" type="text" value="ESAS_RESID_AZN">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="anp_c">Normal principal amount in currency:</label>
+								<input class="Form-input" id="anp_c" name="anp_c" type="text" value="ESAS_RESID">
+							</div>
+						</div>
+						<div class="Form-section">
+							<div class="Form-field">
+								<label class="Form-label" for="aop_m">Overdue principal amount in manats:</label>
+								<input class="Form-input" id="aop_m" name="aop_m" type="text" value="VK_ESAS_QALIQ_AZN">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="aop_c">Overdue principal amount in currency:</label>
+								<input class="Form-input" id="aop_c" name="aop_c" type="text" value="VK_ESAS_QALIQ">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="ani_m">Normal interest amount in manats:</label>
+								<input class="Form-input" id="ani_m" name="ani_m" type="text">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="ani_c">Normal interest amount in currency:</label>
+								<input class="Form-input" id="ani_c" name="ani_c" type="text"></div>
+							<div class="Form-field">
+								<label class="Form-label" for="aoi_m">Overdue interest amount in manats:</label>
+								<input class="Form-input" id="aoi_m" name="aoi_m" type="text">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="aoi_c">Overdue interest amount in currency:</label>
+								<input class="Form-input" id="aoi_c" name="aoi_c" type="text">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="aor_m">Original amount in manats:</label>
+								<input class="Form-input" id="aor_m" name="aor_m" type="text" value="ESAS_INIT_AZN">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="aor_c">Original amount in currency:</label>
+								<input class="Form-input" id="aor_c" name="aor_c" type="text" value="ESAS_INIT">
+							</div>
+						</div>
+						<div class="Form-section">
+							<div class="Form-field">
+								<label class="Form-label" for="int_rate">Interest rate:</label>
+								<input class="Form-input" id="int_rate" name="int_rate" type="text">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="id_l">Contract (loan) ID if any:</label>
+								<input class="Form-input" id="id_l" name="id_l" type="text" value="KREDIT_HESABI">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="id_c">Client ID:</label>
+								<input class="Form-input" id="id_c" name="id_c" type="text" value="KREDIT_HESABI">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="id_sub">Subaccount (order of loan):</label>
+								<input class="Form-input" id="id_sub" name="id_sub" type="text" value="SUBHESAB">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="cid">Currency ID (or name):</label>
+								<input class="Form-input" id="cid" name="cid" type="text" value="CURRENCY">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="pid">Product ID or name:</label>
+								<input class="Form-input" id="pid" name="pid" type="text" value="FEA_KODU">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="ctype">Product ID or name:</label>
+								<input class="Form-input" id="ctype" name="ctype" type="text" value="MUST_NOVU">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="ptype">Product ID or name:</label>
+								<input class="Form-input" id="ptype" name="ptype" type="text" value="ODEME_QAYDASI">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="plist">Product id or name list:</label>
+								<input class="Form-input" id="plist" name="plist" type="text" value="(01801, 02201, 02203, 02800, 02801, 02803, 02805)">
+							</div>
+							<div class="Form-field">
+								<label class="Form-label" for="wrof">Write-off status column:</label>
+								<input class="Form-input" id="wrof" name="wrof" type="text">
+							</div>
+						</div>
+					</div>
+					<div class="Form-buttonContainer">
+						<button class="Form-button">Submit data</button>
+					</div>
+			</form>
+		</div>
+	  </div>
+	</div>
+
 <!-- {%  if scoreval  %}-->
 <!-- <h1>The mpg score is {{scoreval}}</h1>-->
 <!-- <h3>If the response is good. Do you want to save it in DB?-->
@@ -52,11 +246,8 @@
 <!-- {% else %}-->
 <!-- <input type="submit" value="Submit" ></div>-->
 <!-- {% endif %}-->
-<input type="submit" value="Submit" ></div>
 
-</form>
-<br>
+<!-- {% endif%}-->
 
-<h1>The result score is {{result}}</h1>
-
-{% endblock %}
+    {% csrf_token %}
+    {% endblock %}

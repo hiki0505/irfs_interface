@@ -1,72 +1,84 @@
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-<head>
-    <meta charset="utf-8">
-    <!-- <title>IFRS-9</title> -->
-    {% load static %}
+    <head>
+        <meta charset="utf-8">
+        <!-- <title>IFRS-9</title> -->
+        {% load static %}
 
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"/>
-    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-</head>
+        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'accordion.css' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'radiobutton.css' %}"/>
+        <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
 
-<body>
-	<header>
-		<div class="container">
-          <h1 class="logo"></h1>
-          <nav class="top">
-            <ul>
-              <li><a href="#">General</a></li>
-              <li><a href="#">PD</a></li>
-              <li><a href="#">Macro data and adjustment</a></li>
-              <li><a href="#">LGD</a></li>
-              <li><a href="#">CCF</a></li>
-              <li><a href="#">Staging</a></li>
-              <li><a href="#">ECL</a></li>
-            </ul>
-          </nav>
+        <header>
+            <div class="container">
+              <h1 class="logo">IFRS-9 Interface</h1>
+              <nav class="top">
+                <ul>
+                  <li><a href="#">General</a></li>
+                  <li><a href="#">PD</a></li>
+                  <li><a href="#">Macro data and adjustment</a></li>
+                  <li><a href="#">LGD</a></li>
+                  <li><a href="#">CCF</a></li>
+                  <li><a href="#">Staging</a></li>
+                  <li><a href="#">ECL</a></li>
+                </ul>
+              </nav>
+            </div>
+        </header>
+
+    </head>
+
+    <body>
+        <div class="btn">
+            <span class="fas fa-bars"></span>
         </div>
-	</header>
+        <nav class="sidebar">
+         <div class="text">Archive dates</div>
+            <ul>
+                <li>
+                    <a href="#" class="feat-btn">Past calculation blocks<span class="fas fa-caret-down first"></span></a>
+                    <ul class="feat-show">
+                        <li><a href="#">Apr 2021</a></li>
+                        <li><a href="#">Mar 2021</a></li>
+                        <li><a href="#">Feb 2021</a></li>
+                        <li><a href="#">Jan 2021</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <div class="content">
 
-    <div class="btn">
-		<span class="fas fa-bars"></span>
-    </div>
-	<nav class="sidebar">
-     <div class="text">Archive dates</div>
-		<ul>
-			<li>
-				<a href="#" class="feat-btn">Past calculation blocks<span class="fas fa-caret-down first"></span></a>
-				<ul class="feat-show">
-					<li><a href="#">Apr 2021</a></li>
-					<li><a href="#">Mar 2021</a></li>
-					<li><a href="#">Feb 2021</a></li>
-					<li><a href="#">Jan 2021</a></li>
-				</ul>
-			</li>
-		</ul>
-	</nav>
-    <div class="content">
-        {% block content %}
-        {% endblock %}
-<!--      <div class="header">IFRS-9 Interface</div>-->
-	</div>
-	<script>
-		$('.btn').click(function(){
-		  $(this).toggleClass("click");
-		  $('.sidebar').toggleClass("show");
-		});
-		  $('.feat-btn').click(function(){
-			$('nav ul .feat-show').toggleClass("show");
-			$('nav ul .first').toggleClass("rotate");
-		  });
-		  $('.serv-btn').click(function(){
-			$('nav ul .serv-show').toggleClass("show1");
-			$('nav ul .second').toggleClass("rotate");
-		  });
-		  $('nav ul li').click(function(){
-			$(this).addClass("active").siblings().removeClass("active");
-		  });
-	 </script>
+            {% block content %}
+            {% endblock %}
 
-  </body>
+        </div>
+
+        <footer>
+            <div class="container">
+                Copyright &copy; 2021 Simple Co.
+            </div>
+        </footer>
+
+        <script>
+            $('.btn').click(function(){
+              $(this).toggleClass("click");
+              $('.sidebar').toggleClass("show");
+            });
+              $('.feat-btn').click(function(){
+                $('nav ul .feat-show').toggleClass("show");
+                $('nav ul .first').toggleClass("rotate");
+              });
+              $('.serv-btn').click(function(){
+                $('nav ul .serv-show').toggleClass("show1");
+                $('nav ul .second').toggleClass("rotate");
+              });
+              $('nav ul li').click(function(){
+                $(this).addClass("active").siblings().removeClass("active");
+              });
+         </script>
+
+    </body>
 </html>
