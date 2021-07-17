@@ -22,8 +22,13 @@ class DatabaseCredentials(models.Model):
 
 
 class Ifrs(models.Model):
-    repd_start = models.DateField(default=date.today)
-    repd_end = models.DateField(default=date.today)
+    repd_start = models.DateField(null=True, blank=True)
+    repd_end = models.DateField(null=True, blank=True)
+    PERIOD_CHOICES = (
+        ('monthly', 'monthly'),
+        ('yearly', 'yearly')
+    )
+    repd_period = models.CharField(max_length=50, choices=PERIOD_CHOICES, null=True, blank=True)
 
     repd = models.CharField(max_length=255)
     resd = models.CharField(max_length=255)
@@ -58,10 +63,18 @@ class Ifrs(models.Model):
     # bid = "debt_standard_gl_acct_no" # balance account No
     cid = models.CharField(max_length=255)
     pid = models.CharField(max_length=255)
-
-    plist = models.CharField(max_length=255)
+    ctype = models.CharField(max_length=255)
+    ptype = models.CharField(max_length=255)
+    # plist = models.CharField(max_length=255, null=True, blank=True)
+    # plist_cons = models.CharField(max_length=255, null=True, blank=True)
+    # plist_corp = models.CharField(max_length=255, null=True, blank=True)
+    # plist_sole = models.CharField(max_length=255, null=True, blank=True)
     wrof = models.CharField(max_length=255)
 
+
+# class Plist(models.Model):
+#     name = models.CharField(max_length=255)
+#     product_code = models.CharField(max_length=255)
     # class Meta:
     #     db_table = "MF"
 

@@ -17,7 +17,7 @@ from datetime import timedelta as dlt
 # import dill
 # import pickle
 
-def pd_calculator(db_credentials, ifrs_creds):
+def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
     conn = co.connect(u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'], db_credentials['dbname']))
     # 'ruqiyye_bedirova/ruqiyye03@192.168.0.17:1521/bank'
     print(conn)
@@ -65,7 +65,7 @@ def pd_calculator(db_credentials, ifrs_creds):
     ctype = ifrs_creds['ctype']  # customer type, individual or legal
     ptype = ifrs_creds['ptype']  # payment type, annuity for these purposes
 
-    plist = ifrs_creds['plist']  # Product id or name list
+    # plist = ifrs_creds['plist']  # Product id or name list
     # wrof = "WROF" # write-off status column
 
     # mortgage - (01000, 01001)
@@ -87,8 +87,11 @@ def pd_calculator(db_credentials, ifrs_creds):
 
     stg1 = ""
     stg2 = ""
-
-    for i in ddm.ACT_DATE[((ddm.ACT_DATE > '2015-09-01') & (ddm.ACT_DATE < '2020-08-01'))]:
+    '''
+    TypeError at /calculate
+    Invalid comparison between dtype=datetime64[ns] and date
+    '''
+    for i in ddm.ACT_DATE[((ddm.ACT_DATE > repd_start) & (ddm.ACT_DATE < repd_end))]:
         end_date = i + dlt(days=370)
         stage2_st_date = i - dlt(days=185)
         stage3_st_date = i - dlt(days=370)

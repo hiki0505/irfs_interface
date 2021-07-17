@@ -1,8 +1,65 @@
 {% extends 'irfs/base.html' %}
 {% block content%}
 
+<div class="accordion-wrapper">
 
-{{ queryset }}
+<!--	  <div class="accordion">-->
+<!--		<input type="checkbox" name="radio-a" id="check2">-->
+<!--&lt;!&ndash;		<label class="accordion-label" for="check2">Select period:</label>&ndash;&gt;-->
+<!--		<div class="accordion-content">-->
+		  <form class="Form" name="form" role="form" method="post" action="calculate">
+			  {% csrf_token %}
+				<div class="Form-title">Select period:<br></div>
+			  		<div class="Database-section">
+                    <label for="monthly" class="radio">
+                        <input type="radio" name="repd_period" id="monthly" class="radio__input" value="monthly">
+                        <div class="radio__radio"></div>
+                        Monthly
+                    </label>
+                    <label for="yearly" class="radio">
+                        <input type="radio" name="repd_period" id="yearly" class="radio__input" value="yearly">
+                        <div class="radio__radio"></div>
+                        Yearly
+                    </label>
+					</div>
+					<div class="Form-buttonContainer">
+						<button class="Form-button">SUBMIT</button>
+					</div>
+          </form>
+</div>
+<!--	  </div>-->
 
+{% if pd_json_list %}
+    {% for key, dfs in pd_json_list.items %}
+        <div class="container">
+          <h2 class="text-center"><u>{{ key }}</u></h2><br>
+          <table class="table table-dark table-striped">
+            <thead>
+              <tr>
+                <th>ACT_DATE</th>
+                <th>ORIG_COUNT</th>
+                <th>ORIG_AMOUNT</th>
+                <th>RATE</th>
+              </tr>
+            </thead>
+            <tbody>
+            <!-- jinja2 Technique -->
+            {% if dfs %}
+            {% for df in dfs %}
+                {% for i in df %}
+                  <tr>
+                    <td>{{i.ACT_DATE}}</td>
+                    <td>{{i.ORIG_COUNT}}</td>
+                    <td>{{i.ORIG_AMOUNT}}</td>
+                    <td>{{i.RATE}}</td>
+                  </tr>
+                {% endfor %}
+            {% endfor %}
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+    {% endfor %}
+{% endif %}
 
 {% endblock %}
