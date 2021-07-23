@@ -8,6 +8,10 @@
                     <div class="accordion-content">
                         <form class="Form" name="form" role="form" method="post" action="">
                             {% csrf_token %}
+                            <div class="plist_container">
+                                <label class="p_label">Name:</label>
+                                <label class="p_label">Plist</label>
+                            </div>
                             <div class="Form-title">Add p-list as list:<br></div>
                                 <div class="plist_container">
                                   <table class="_table" id="plist_table">
@@ -17,7 +21,7 @@
                                         <th width="70%">pList</th>
                                         <th width="50px" id="btn_brd">
                                           <div class="action_container">
-                                            <button class="success" onclick="create_tr('table_body')">
+                                            <button type="button" class="success" onclick="create_tr('table_body')">
                                               <i class="fa fa-plus"></i>
                                             </button>
                                           </div>
@@ -34,7 +38,7 @@
                                         </td>
                                         <td id="btn_brd">
                                           <div class="action_container">
-                                            <button class="danger" onclick="remove_tr(this)">
+                                            <button type="button" class="danger" onclick="remove_tr(this)">
                                               <i class="fa fa-close"></i>
                                             </button>
                                           </div>
