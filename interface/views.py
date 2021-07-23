@@ -213,3 +213,6 @@ def calculate(request):
 #     # db_credentials = 'ruqiyye_bedirova/ruqiyye03@192.168.0.17:1521/bank'
 #     context = {'queryset': queryset}
 #     return render(request, 'irfs/pd.html', context=context)
+
+def lgd(request):
+    return render(request, 'irfs/lgd.html')

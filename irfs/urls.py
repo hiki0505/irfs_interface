@@ -12,5 +12,6 @@ urlpatterns = [
     url('predict', views.predictMPG, name='predictMPG'),
     url('connect', views.connect, name='connect'),
     url('dbconn_view', views.dbconn_view, name='dbconn_view'),
-    url('calculate', views.calculate, name='calculate')
+    url('calculate', views.calculate, name='calculate'),
+    url('lgd', views.lgd, name='lgd')
 ]
