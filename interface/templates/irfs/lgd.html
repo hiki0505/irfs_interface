@@ -53,6 +53,28 @@
                         </form>
                     </div>
         </div>
+
+        <div class="accordion">
+             <input type="checkbox" name="radio-a" id="check2">
+                <label class="accordion-label" for="check2">RECOVERY PERIOD</label>
+                    <div class="accordion-content">
+                        <form class="Form" name="form" role="form" method="post" action="">
+                            {% csrf_token %}
+                            <div class="Form-title">Select recovery period:<br></div>
+                                <div class="Form-sections">
+						            <div class="Form-section" style="width: 40%;">
+                                        <div class="Form-field">
+                                            <label class="Form-label" for="host">Recovery period in month:</label>
+								            <input class="Form-input" id="host" name="host" type="number">
+                                        </div>
+                                    </div>
+                                </div>
+                            <div class="Form-buttonContainer">
+                                <button class="Form-button">SUBMIT</button>
+                            </div>
+                        </form>
+                    </div>
+        </div>
     </div>
 
 
