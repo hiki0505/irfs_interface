@@ -1,0 +1,92 @@
+.plist_container {
+    width: 90%;
+    background-color: #fff;
+    margin: auto auto 20px;
+    padding: 5px;
+    /*box-shadow: 0 1px 2px #0001, 0 1px 2px #0001;*/
+    border-radius: 5px;
+}
+
+._table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+._table :is(th, td) {
+    border: 1px solid #0002;
+    padding: 2px 5px;
+}
+
+#btn_brd {
+    border: none;
+}
+
+/* form field design start */
+.form_control {
+    border: none;
+    background-color: transparent;
+    outline: none;
+    padding: 3px 6px;
+    width: 100%;
+    color: #333;
+    transition: 0.3s ease-in-out;
+}
+
+.form_control::placeholder {
+    color: inherit;
+    opacity: 0.5;
+}
+
+/* form field design end */
+
+.success {
+    background-color: #07826b !important;
+}
+
+.warning {
+    background-color: #ebba33 !important;
+}
+
+.primary {
+    background-color: #259dff !important;
+}
+
+.secondary {
+    background-color: #00bcd4 !important;
+}
+
+.danger {
+    background-color: #cb4a4a !important;
+}
+
+.action_container {
+    display: inline-flex;
+}
+
+.action_container>* {
+    border: none;
+    outline: none;
+    color: #fff;
+    text-decoration: none;
+    display: inline-block;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+.action_container>*+* {
+    border-left: 1px solid #fff5;
+}
+
+.action_container>*:hover {
+    filter: hue-rotate(-20deg) brightness(0.9);
+    transform: scale(1.05);
+    border-color: transparent;
+    box-shadow: 0 2px 2px #0004;
+    border-radius: 2px;
+}
+
+.action_container>*:active {
+    transition: unset;
+    transform: scale(.95);
+}

@@ -18,7 +18,12 @@ from datetime import timedelta as dlt
 # import pickle
 
 def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
-    conn = co.connect(u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'], db_credentials['dbname']))
+    conn = co.connect(u'{}/{}@{}/{}'.format(
+        db_credentials['username'],
+        db_credentials['password'],
+        db_credentials['host'],
+        db_credentials['dbname'])
+    )
     # 'ruqiyye_bedirova/ruqiyye03@192.168.0.17:1521/bank'
     print(conn)
     cursor = conn.cursor()

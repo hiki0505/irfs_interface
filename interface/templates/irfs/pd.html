@@ -1,33 +1,82 @@
 {% extends 'irfs/base.html' %}
 {% block content%}
 
-<div class="accordion-wrapper">
+    <div class="accordion-wrapper">
+        <div class="accordion">
+             <input type="checkbox" name="radio-a" id="check1">
+                <label class="accordion-label" for="check1">P-LIST ADDITION</label>
+                    <div class="accordion-content">
+                        <form class="Form" name="form" role="form" method="post" action="">
+                            {% csrf_token %}
+                            <div class="Form-title">Add p-list as list:<br></div>
+                                <div class="plist_container">
+                                  <table class="_table" id="plist_table">
+                                    <thead>
+                                      <tr>
+                                        <th>Name</th>
+                                        <th width="70%">pList</th>
+                                        <th width="50px" id="btn_brd">
+                                          <div class="action_container">
+                                            <button class="success" onclick="create_tr('table_body')">
+                                              <i class="fa fa-plus"></i>
+                                            </button>
+                                          </div>
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody id="table_body">
+                                      <tr>
+                                        <td>
+                                          <input type="text" class="form_control" placeholder="Consumer">
+                                        </td>
+                                        <td>
+                                          <input type="text" class="form_control" placeholder="18001, 18002, ...">
+                                        </td>
+                                        <td id="btn_brd">
+                                          <div class="action_container">
+                                            <button class="danger" onclick="remove_tr(this)">
+                                              <i class="fa fa-close"></i>
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                            <div class="Form-buttonContainer">
+                                <button class="Form-button">ADD P-LIST</button>
+                            </div>
+                        </form>
+                    </div>
+        </div>
 
-<!--	  <div class="accordion">-->
-<!--		<input type="checkbox" name="radio-a" id="check2">-->
-<!--&lt;!&ndash;		<label class="accordion-label" for="check2">Select period:</label>&ndash;&gt;-->
-<!--		<div class="accordion-content">-->
-		  <form class="Form" name="form" role="form" method="post" action="calculate">
-			  {% csrf_token %}
-				<div class="Form-title">Select period:<br></div>
-			  		<div class="Database-section">
-                    <label for="monthly" class="radio">
-                        <input type="radio" name="repd_period" id="monthly" class="radio__input" value="monthly">
-                        <div class="radio__radio"></div>
-                        Monthly
-                    </label>
-                    <label for="yearly" class="radio">
-                        <input type="radio" name="repd_period" id="yearly" class="radio__input" value="yearly">
-                        <div class="radio__radio"></div>
-                        Yearly
-                    </label>
-					</div>
-					<div class="Form-buttonContainer">
-						<button class="Form-button">SUBMIT</button>
-					</div>
-          </form>
-</div>
-<!--	  </div>-->
+
+        <div class="accordion">
+             <input type="checkbox" name="radio-a" id="check2">
+                <label class="accordion-label" for="check2">PD CALCULATION</label>
+                    <div class="accordion-content">
+                        <form class="Form" name="form" role="form" method="post" action="calculate">
+                            {% csrf_token %}
+                            <div class="Form-title">Select report type:<br></div>
+                            <div class="Database-section" style="text-align: center;">
+                            <label for="monthly" class="radio">
+                                <input type="radio" name="repd_period" id="monthly" class="radio__input" value="monthly">
+                                <div class="radio__radio"></div>
+                                Monthly
+                            </label>
+                            <label for="yearly" class="radio">
+                                <input type="radio" name="repd_period" id="yearly" class="radio__input" value="yearly">
+                                <div class="radio__radio"></div>
+                                Yearly
+                            </label>
+                            </div>
+                            <div class="Form-buttonContainer">
+                                <button class="Form-button">SUBMIT</button>
+                            </div>
+                        </form>
+                    </div>
+        </div>
+    </div>
 
 {% if pd_json_list %}
     {% for key, dfs in pd_json_list.items %}
