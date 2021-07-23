@@ -1,0 +1,13 @@
+{% extends 'irfs/base.html' %}
+{% block content%}
+<div class="accordion-wrapper">
+
+  <h2> Upload macros csv file here </h2>
+  <form method="post" enctype="multipart/form-data" >
+    {% csrf_token %}
+    <input type="file" name="document">
+    <button type="submit"> Upload file </button>
+  </form>
+
+</div>
+{% endblock %}

@@ -8,11 +8,13 @@ import cx_Oracle as co
 from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse
 from django.shortcuts import render
-
+import pandas as pd
 from .script import IRFS
 from .services import db_connection
+import pprint
 from .models import DatabaseCredentials, Ifrs
 from .pd_script import pd_calculator
+from .big_macro_func import big_macro_function
 class DatabaseConnectionError(Exception):
     pass
 
@@ -161,31 +163,79 @@ def calculate(request):
         print(db_credentials)
         for i,j in PLIST_GLOBS.items():
             pd_df_list[i] = pd_calculator(db_credentials, values[0], j, repd_start, repd_end)
+        # print('tut budet to wto nado')
+        # print(pd_df_list['consumer'][0])
+        # print(pd_df_list['consumer'][1])
         # for i in PLIST_GLOBS.values():
         #     pd_df_list.append(pd_calculator(db_credentials, values[0], i, repd_start, repd_end))
+        pd_json_list_show = {}
         pd_json_list = {}
         for i, j in pd_df_list.items():
-            pd_json_list[i] = [json.loads(df.reset_index().to_json(orient ='records')) for df in j]
+            pd_json_list_show[i] = [json.loads(df.reset_index().to_json(orient ='records', date_format='iso')) for df in j]
+            pd_json_list[i] = [df.to_json(orient='index') for df in j]
+        # for i, j in pd_df_list.items():
+        #     pd_json_list[i] = [df.to_json(orient='index') for df in j]
+
         '''
         {
         'concumer': [data1, data2],
         fsfsdf
-        
         }
         '''
+        # print(pd_json_list_show['consumer'][0])
+        # print(pd_json_list_show['consumer'][1])
+        request.session['pd_data_dict'] = pd_json_list
+        print(request.session.get('pd_data_dict'))
+        print('-' * 30)
+        print(pd_json_list['consumer'][0])
+        print('-' * 30)
+        # dataframe1 = pd.DataFrame.from_dict(pd_json_list['consumer'][0], orient="records")
+        dataframe2 = pd.read_json(pd_json_list['consumer'][0], orient='index')
+        # print(dataframe1)
+        print(dataframe2)
+        smth = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
+        print('here is smth')
+        print(smth)
+        dataframe2['ACT_DATE'] = smth
+        print(dataframe2)
+
         # print(pd_df_list)
         # pd_df_1dlist = list(chain.from_iterable(pd_df_list))
         # pd_df_1dlist_html = [pd_df.to_html() for pd_df in pd_df_1dlist]
         # pd_jsons = [json.loads(df.reset_index().to_json(orient ='records')) for df in pd_df_1dlist]
         # df_html = pd_df_list[0][0].to_html()
-        context = {'pd_json_list': pd_json_list}
+        context = {'pd_json_list': pd_json_list_show}
         return render(request, 'irfs/pd.html', context=context)
         # return HttpResponse(df_html)
     else:
         return render(request, 'irfs/pd.html')
 
-def show_pd(request):
-    pass
+def upload(request):
+    if request.method == 'POST':
+        uploaded_file = request.FILES['document']
+        pd_data_dict = request.session.get('pd_data_dict')
+        print(pd_data_dict)
+        dataframe1 = pd.read_json(pd_data_dict['consumer'][0], orient='index')
+        dataframe2 = pd.read_json(pd_data_dict['consumer'][1], orient='index')
+        act_date1 = pd.to_datetime(dataframe1.ACT_DATE, unit='ms')
+        act_date2 = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
+        dataframe1['DATE_OPER'] = act_date1
+        dataframe2['DATE_OPER'] = act_date2
+        dataframe1.drop('ACT_DATE', axis=1, inplace=True)
+        dataframe2.drop('ACT_DATE', axis=1, inplace=True)
+        st1 = pd.read_excel('../irfs/interface/dcorp1.xlsx', engine='openpyxl')
+        st1.drop(columns=['Unnamed: 0'], inplace=True)
+
+        st2 = pd.read_excel('../irfs/interface/dcorp2.xlsx', engine='openpyxl')
+        st2.drop(columns=['Unnamed: 0'], inplace=True)
+        overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(st1, st2, uploaded_file)
+        print(overall_pd_st1, overall_pd_st2, preds_st1, preds_st2)
+
+        # print(uploaded_file)
+        # data = pd.read_excel(uploaded_file, sheet_name="2010", engine='openpyxl')
+
+        # print(data)
+    return render(request, 'irfs/upload.html')
     # queryset = Ifrs.objects
     # values = [
     #     { key: value for key, value in queryset.values()[0].items() if key != 'id'}

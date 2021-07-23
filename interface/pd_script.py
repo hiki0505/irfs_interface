@@ -24,14 +24,16 @@ def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
     cursor = conn.cursor()
     cursor.execute(""" ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS' """)
 
-    ddate = pd.read_sql('select distinct act_date from portfolio order by act_date', con=conn)
+    ddate = pd.read_sql('select distinct act_date from portfolio_21 order by act_date', con=conn)
+    print(ddate)
+    print('*'*30)
     ddm = ddate[:]
     ddm.index = pd.to_datetime(ddm.ACT_DATE)
     ddm = ddm.resample('M').last()
-
+    print(ddm.tail())
     # globs
 
-    dbt = "portfolio"  # table name in the database
+    dbt = "portfolio_21"  # table name in the database
 
     repd = ifrs_creds['repd']  # report date for the portfolio
     resd = ifrs_creds['resd']  # date of restructuring
@@ -183,9 +185,11 @@ def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
 
     data1 = pd.read_sql(sql1, con=conn)
     # data1.to_pickle('cons_tr_data1.pkl')
-
+    print('*'*30)
+    print(data1)
     data2 = pd.read_sql(sql2, con=conn)
-
+    print('*' * 30)
+    print(data2)
     # data3 = pd.merge(data1, data2)
     # data2.to_pickle('cons_tr_data2.pkl')
     return data1, data2
