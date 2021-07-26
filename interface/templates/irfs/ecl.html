@@ -4,21 +4,18 @@
     <div class="accordion-wrapper">
         <div class="accordion">
              <input type="checkbox" name="radio-a" id="check1">
-                <label class="accordion-label" for="check1">P-LIST ADDITION FOR LGD</label>
+                <label class="accordion-label" for="check1">P-LIST FOR ECL</label>
                     <div class="accordion-content">
                         <form class="Form" name="form" role="form" method="post" action="">
                             {% csrf_token %}
-                            <div class="plist_container">
-                                <label class="p_label">Name:</label>
-                                <label class="p_label">Plist</label>
-                            </div>
-                            <div class="Form-title">Add p-list as list:<br></div>
+                            <div class="Form-title">Choose plist for ECL:<br></div>
                                 <div class="plist_container">
                                   <table class="_table" id="plist_table">
                                     <thead>
                                       <tr>
-                                        <th>Name</th>
-                                        <th width="70%">pList</th>
+                                        <th>Product name</th>
+                                        <th>PD</th>
+                                        <th>LGD</th>
                                         <th width="50px" id="btn_brd">
                                           <div class="action_container">
                                             <button type="button" class="success" onclick="create_tr('table_body')">
@@ -34,7 +31,16 @@
                                           <input type="text" class="form_control" name="client_name" placeholder="Consumer">
                                         </td>
                                         <td>
-                                          <input type="text" class="form_control" name="client_code" placeholder="18001, 18002, ...">
+                                          <select name="plist" class="plist">
+                                              <option value="">Choose an option</option>
+                                              <option value="">aaaaa</option>
+                                          </select>
+                                        </td>
+                                        <td>
+                                          <select name="plist" class="plist">
+                                              <option value="">Choose an option</option>
+                                              <option value="">aaaaa</option>
+                                          </select>
                                         </td>
                                         <td id="btn_brd">
                                           <div class="action_container">
@@ -49,28 +55,6 @@
                                 </div>
                             <div class="Form-buttonContainer">
                                 <button class="Form-button">ADD P-LIST</button>
-                            </div>
-                        </form>
-                    </div>
-        </div>
-
-        <div class="accordion">
-             <input type="checkbox" name="radio-a" id="check2">
-                <label class="accordion-label" for="check2">RECOVERY PERIOD</label>
-                    <div class="accordion-content">
-                        <form class="Form" name="form" role="form" method="post" action="">
-                            {% csrf_token %}
-                            <div class="Form-title">Add recovery period:<br></div>
-                                <div class="Form-sections">
-						            <div class="Form-section" style="width: 40%;">
-                                        <div class="Form-field">
-                                            <label class="Form-label" for="rec_per">Recovery period in month:</label>
-								            <input class="Form-input" id="rec_per" name="rec_per" type="number">
-                                        </div>
-                                    </div>
-                                </div>
-                            <div class="Form-buttonContainer">
-                                <button class="Form-button">SUBMIT</button>
                             </div>
                         </form>
                     </div>

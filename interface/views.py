@@ -216,3 +216,7 @@ def calculate(request):
 
 def lgd(request):
     return render(request, 'irfs/lgd.html')
+
+
+def ecl(request):
+    return render(request, 'irfs/ecl.html')
