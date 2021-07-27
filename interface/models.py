@@ -72,9 +72,9 @@ class Ifrs(models.Model):
     wrof = models.CharField(max_length=255)
 
 
-# class Plist(models.Model):
-#     name = models.CharField(max_length=255)
-#     product_code = models.CharField(max_length=255)
+class Plist(models.Model):
+    name = models.CharField(max_length=255)
+    product_code = models.CharField(max_length=255)
     # class Meta:
     #     db_table = "MF"
 

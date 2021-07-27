@@ -10,7 +10,8 @@ from copulas.multivariate import GaussianMultivariate
 from numpy.linalg import cholesky
 from datetime import datetime
 
-def big_macro_function(st1, st2, data_macro):
+
+def big_macro_function(st1, st2, data_macro, repd_period):
     # st1 = pd.read_excel('dcorp1.xlsx', engine='openpyxl')
     # st1.drop(columns=['Unnamed: 0'], inplace=True)
 
@@ -34,13 +35,22 @@ def big_macro_function(st1, st2, data_macro):
 
     mdf = pd.DataFrame(list(map(list, zip(*[msigns, mgroups]))), index=mcols, columns=['msigns', 'mgroups'])
 
+    def period_detector(period):
+        return 12 if period == 'yearly' else 1
+
+
     def prepare_data(data):
-        data['act_end'] = data['DATE_OPER'].apply(lambda x: x + pd.DateOffset(years=1))
+        data['act_end'] = data['DATE_OPER'].apply(lambda x: x - pd.DateOffset(months=period_detector(repd_period)))
         data['month'] = dtIndex(data.DATE_OPER).month
         data['time_index'] = dtIndex(data.DATE_OPER).year.astype('str') + dtIndex(data.DATE_OPER).month.astype('str')
         data['time_index2'] = dtIndex(data.act_end).year.astype('str') + dtIndex(data.act_end).month.astype('str')
+        # data['RATE'].replace(0, 0.0000001)
+        # print(dt)-
         data['rate2'] = np.log(data.RATE) - np.log(1 - data.RATE)
-
+        # data = data.loc[data['rate2'] != np.nan, :]
+        print(data)
+        print('burdadi')
+        print(data['rate2'])
         macro['ym'] = macro['year'].astype('str') + macro['month'].astype('str')
         data = data.merge(macro, how='left', left_on='time_index', right_on='ym').merge(macro, how='left',
                                                                                         left_on='time_index2',

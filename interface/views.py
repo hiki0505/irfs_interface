@@ -9,14 +9,20 @@ from dateutil.relativedelta import relativedelta
 from django.http import HttpResponse
 from django.shortcuts import render
 import pandas as pd
+import ast
 from .script import IRFS
 from .services import db_connection
 import pprint
-from .models import DatabaseCredentials, Ifrs
+from .models import DatabaseCredentials, Ifrs, Plist
 from .pd_script import pd_calculator
+from .lgd import lgd_calculator
+from .staging import staging_calculator
 from .big_macro_func import big_macro_function
+
+
 class DatabaseConnectionError(Exception):
     pass
+
 
 PLIST_GLOBS = {
     'consumer': "(01801, 02201, 02203, 02800, 02801, 02803, 02805)",
@@ -36,7 +42,8 @@ def connect(request):
 
 def dbconn_view(request):
     if request.method == 'POST':
-        if request.POST.get('db', False) and request.POST['host'] and request.POST['username'] and request.POST['password'] and request.POST['db_name']:
+        if request.POST.get('db', False) and request.POST['host'] and request.POST['username'] and request.POST[
+            'password'] and request.POST['db_name']:
             database = DatabaseCredentials()
             database.engine = request.POST.get('db', False)
             database.host = request.POST['host']
@@ -82,6 +89,7 @@ def homepage(request):
 def general(request):
     return render(request, 'irfs/general.html')
 
+
 def predictMPG(request):
     if request.method == 'POST':
         macros = Ifrs()
@@ -121,10 +129,10 @@ def predictMPG(request):
         # temp = dict(zip(FEATURES, values))
         # print(temp)
         # result = IRFS.fake_score(temp, FEATURES)
-    # testDtaa = pd.DataFrame({'x': temp}).transpose()
-    # scoreval = reloadModel.predict(testDtaa)[0]
-    # context = {'scoreval': scoreval, 'temp': temp}
-    # context = {'result': result}
+        # testDtaa = pd.DataFrame({'x': temp}).transpose()
+        # scoreval = reloadModel.predict(testDtaa)[0]
+        # context = {'scoreval': scoreval, 'temp': temp}
+        # context = {'result': result}
         return render(request, 'irfs/general.html', context=context)
     else:
         return render(request, 'irfs/general.html')
@@ -139,18 +147,16 @@ def calculate(request):
         if request.POST.get('repd_period') == 'yearly':
             # queryset.update(repd_start = queryset.repd_start + relativedelta(years=+1))
             # queryset.update(repd_end=queryset.repd_end + relativedelta(years=-1))
-            queryset.repd_start = queryset.repd_start + relativedelta(years=+1)
-            queryset.repd_end = queryset.repd_end + relativedelta(years=-1)
-            queryset.save()
+            repd_start = queryset.repd_start + relativedelta(years=+1)
+            repd_end = queryset.repd_end + relativedelta(years=-1)
         elif request.POST.get('repd_period') == 'monthly':
             # queryset.update(repd_start=queryset.repd_start + relativedelta(months=+1))
             # queryset.update(repd_end=queryset.repd_end + relativedelta(months=-1))
-            queryset.repd_start = queryset.repd_start + relativedelta(months=+1)
-            queryset.repd_end = queryset.repd_end + relativedelta(months=-1)
-            queryset.save()
+            repd_start = queryset.repd_start + relativedelta(months=+1)
+            repd_end = queryset.repd_end + relativedelta(months=-1)
         queryset.repd_period = request.POST.get('repd_period')
-        repd_start = queryset.repd_start.strftime("%d-%b-%y")
-        repd_end = queryset.repd_end.strftime("%d-%b-%y")
+        repd_start = repd_start.strftime("%d-%b-%y")
+        repd_end = repd_end.strftime("%d-%b-%y")
         print('repd start -> ', repd_start)
         print('repd end -> ', repd_end)
         queryset.save()
@@ -161,7 +167,7 @@ def calculate(request):
         queryset2 = DatabaseCredentials.objects
         db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
         print(db_credentials)
-        for i,j in PLIST_GLOBS.items():
+        for i, j in PLIST_GLOBS.items():
             pd_df_list[i] = pd_calculator(db_credentials, values[0], j, repd_start, repd_end)
         # print('tut budet to wto nado')
         # print(pd_df_list['consumer'][0])
@@ -171,7 +177,8 @@ def calculate(request):
         pd_json_list_show = {}
         pd_json_list = {}
         for i, j in pd_df_list.items():
-            pd_json_list_show[i] = [json.loads(df.reset_index().to_json(orient ='records', date_format='iso')) for df in j]
+            pd_json_list_show[i] = [json.loads(df.reset_index().to_json(orient='records', date_format='iso')) for df in
+                                    j]
             pd_json_list[i] = [df.to_json(orient='index') for df in j]
         # for i, j in pd_df_list.items():
         #     pd_json_list[i] = [df.to_json(orient='index') for df in j]
@@ -210,8 +217,32 @@ def calculate(request):
     else:
         return render(request, 'irfs/pd.html')
 
+
+def plist_save(request):
+    if request.method == 'POST':
+        names = ast.literal_eval(str(request.POST.getlist('client_name')))
+        codes = ast.literal_eval(str(request.POST.getlist('client_code')))
+        # print(type(names), names)
+        # print(type(codes), codes)
+
+        plists = dict(zip(names, codes))
+        # print(plists)
+        for name, code in plists.items():
+            plists = Plist()
+            plists.name = name
+            plists.product_code = code
+            plists.save()
+
+        context = {'pl_success': 'Plists saved successfully!'}
+
+        return render(request, 'irfs/pd.html', context=context)
+
+    return render(request, 'irfs/pd.html')
+
+
 def upload(request):
     if request.method == 'POST':
+        queryset = Ifrs.objects.last()
         uploaded_file = request.FILES['document']
         pd_data_dict = request.session.get('pd_data_dict')
         print(pd_data_dict)
@@ -223,18 +254,14 @@ def upload(request):
         dataframe2['DATE_OPER'] = act_date2
         dataframe1.drop('ACT_DATE', axis=1, inplace=True)
         dataframe2.drop('ACT_DATE', axis=1, inplace=True)
-        st1 = pd.read_excel('../irfs/interface/dcorp1.xlsx', engine='openpyxl')
-        st1.drop(columns=['Unnamed: 0'], inplace=True)
 
-        st2 = pd.read_excel('../irfs/interface/dcorp2.xlsx', engine='openpyxl')
-        st2.drop(columns=['Unnamed: 0'], inplace=True)
-        overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(st1, st2, uploaded_file)
+        overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(dataframe1, dataframe2, uploaded_file,
+                                                                                  queryset.repd_period)
         print(overall_pd_st1, overall_pd_st2, preds_st1, preds_st2)
+        context = {'overall_pd_st1': overall_pd_st1, 'overall_pd_st2': overall_pd_st2, 'preds_st1': preds_st1,
+                   'preds_st2': preds_st2}
+        return render(request, 'irfs/upload.html', context=context)
 
-        # print(uploaded_file)
-        # data = pd.read_excel(uploaded_file, sheet_name="2010", engine='openpyxl')
-
-        # print(data)
     return render(request, 'irfs/upload.html')
     # queryset = Ifrs.objects
     # values = [
@@ -249,3 +276,48 @@ def upload(request):
     # # db_credentials = 'ruqiyye_bedirova/ruqiyye03@192.168.0.17:1521/bank'
     # context = {'queryset': queryset}
     # return render(request, 'irfs/pd.html', context=context)
+
+
+def lgd(request):
+    if request.method == 'POST':
+        rec_per = int(request.POST.get('rec_per'))
+        print(rec_per)
+        print(type(rec_per))
+        lgd_df_list = {}
+        queryset2 = DatabaseCredentials.objects
+        db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
+        values = [
+            {key: value for key, value in Ifrs.objects.values()[0].items() if key != 'id'}
+        ]
+
+        queryset = Ifrs.objects.last()
+        repd_rec_date = queryset.repd_end + relativedelta(months=rec_per)
+        print(repd_rec_date)
+        repd_rec_date_ns = repd_rec_date.strftime("%d-%b-%y")
+        print(repd_rec_date_ns)
+
+        for i, j in PLIST_GLOBS.items():
+            lgd_df_list[i] = lgd_calculator(db_credentials, values[0], j, repd_rec_date_ns)
+
+        print(lgd_df_list)
+        return render(request, 'irfs/lgd.html')
+
+    return render(request, 'irfs/lgd.html')
+
+
+def staging(request):
+    if request.method == 'POST':
+        queryset2 = DatabaseCredentials.objects
+        db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
+        values = [
+            {key: value for key, value in Ifrs.objects.values()[0].items() if key != 'id'}
+        ]
+
+        queryset = Ifrs.objects.last()
+        repd_end = queryset.repd_end.strftime("%d-%b-%y")
+        stage_data = staging_calculator(db_credentials, values[0], repd_end)
+        print(stage_data)
+        return render(request, 'irfs/staging.html')
+
+    return render(request, 'irfs/staging.html')
+

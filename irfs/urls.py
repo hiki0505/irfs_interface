@@ -13,7 +13,10 @@ urlpatterns = [
     url('connect', views.connect, name='connect'),
     url('dbconn_view', views.dbconn_view, name='dbconn_view'),
     url('calculate', views.calculate, name='calculate'),
-    url('upload', views.upload, name='upload')
+    url('upload', views.upload, name='upload'),
+    url('plist_save', views.plist_save, name='plist_save'),
+    url('lgd', views.lgd, name='lgd'),
+    url('staging', views.staging, name='staging')
 ]
 
 if settings.DEBUG:

@@ -9,5 +9,12 @@
     <button type="submit"> Upload file </button>
   </form>
 
+  {% if overall_pd_st1 %}
+    {{ overall_pd_st1 }}
+    {{ overall_pd_st2 }}
+    {{ preds_st1 }}
+    {{ preds_st2 }}
+  {% endif %}
+
 </div>
 {% endblock %}

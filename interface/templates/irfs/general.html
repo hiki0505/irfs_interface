@@ -15,30 +15,33 @@
 		  <form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="dbconn_view">
 			  {% csrf_token %}
 				<div class="Form-title">INPUT CONNECTION PARAMETERS:<br></div>
-			  		<div class="Database-section">
-                    <label for="oracle" class="radio">
-                        <input type="radio" name="db" id="oracle" class="radio__input">
-                        <div class="radio__radio"></div>
-                        Oracle
-                    </label>
-                    <label for="mysql" class="radio">
-                        <input type="radio" name="db" id="mysql" class="radio__input">
-                        <div class="radio__radio"></div>
-                        MySql
-                    </label>
-                    <label for="mssql" class="radio">
-                        <input type="radio" name="db" id="mssql" class="radio__input">
-                        <div class="radio__radio"></div>
-                        MsSql
-                    </label>
-                    <label for="postgresql" class="radio">
-                        <input type="radio" name="db" id="postgresql" class="radio__input">
-                        <div class="radio__radio"></div>
-                        PostgreSql
-                    </label>
-				</div>
 					<div class="Form-sections">
-						<div class="Form-section">
+						<div class="Form-section" style="width: 40%;">
+                             <div class="Form-field">
+								<label class="Form-label" for="db_section">Database type:</label>
+                                <div class="Database-section" id="db_section">
+                                    <label for="oracle" class="radio">
+                                        <input type="radio" name="db" id="oracle" class="radio__input">
+                                        <div class="radio__radio"></div>
+                                        Oracle
+                                    </label>
+                                    <label for="mysql" class="radio">
+                                        <input type="radio" name="db" id="mysql" class="radio__input">
+                                        <div class="radio__radio"></div>
+                                        MySql
+                                    </label>
+                                    <label for="mssql" class="radio">
+                                        <input type="radio" name="db" id="mssql" class="radio__input">
+                                        <div class="radio__radio"></div>
+                                        MsSql
+                                    </label>
+                                    <label for="postgresql" class="radio">
+                                        <input type="radio" name="db" id="postgresql" class="radio__input">
+                                        <div class="radio__radio"></div>
+                                        PostgreSql
+                                    </label>
+				                </div>
+							</div>
 							<div class="Form-field">
 								<label class="Form-label" for="host">Host | Server:</label>
 								<input class="Form-input" id="host" name="host" type="text">
@@ -101,13 +104,14 @@
 			<form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="predictMPG">
 			  {% csrf_token %}
 				<div class="Form-title">INPUT TABLE PARAMETERS:<br></div>
-					<div class="Form-title">SELECT REPORT DATE:<br></div>
 					<div class="Form-sections">
 						<div class="Form-section">
 							<div class="Form-field">
 								<label class="Form-label" for="repd_start">Report date start:</label>
 								<input class="Form-input" id="repd_start" name="repd_start" type="date" value="2021-01-01">
 							</div>
+                        </div>
+                        <div class="Form-section">
 							<div class="Form-field">
 								<label class="Form-label" for="repd_end">Report date end:</label>
 								<input class="Form-input" id="repd_end" name="repd_end" type="date" value="2021-06-30">
