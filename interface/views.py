@@ -220,3 +220,11 @@ def lgd(request):
 
 def ecl(request):
     return render(request, 'irfs/ecl.html')
+
+
+def upload(request):
+    return render(request, 'irfs/upload.html')
+
+
+def staging(request):
+    return render(request, 'irfs/staging.html')

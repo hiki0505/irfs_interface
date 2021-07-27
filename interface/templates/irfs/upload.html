@@ -1,0 +1,34 @@
+{% extends 'irfs/base.html' %}
+{% block content%}
+    <div class="accordion-wrapper">
+        <div class="accordion">
+             <input type="checkbox" name="radio-a" id="check1">
+                <label class="accordion-label" for="check1">UPLOADING MACROS</label>
+                    <div class="accordion-content">
+                          <form method="post" enctype="multipart/form-data" >
+                              <div class="Form-title">Upload macro file (in .csv extension) here:<br></div>
+                              {% csrf_token %}
+                              <div class="Form-sections">
+                                  <div class="Form-section">
+                                      <div class="Form-field">
+                                          <input type="file" class="upload-box" name="document">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="Form-buttonContainer">
+                                <button type="submit" class="Form-button">UPLOAD FILE</button>
+                              </div>
+                          </form>
+                    </div>
+        </div>
+
+  {% if overall_pd_st1 %}
+    {{ overall_pd_st1 }}
+    {{ overall_pd_st2 }}
+    {{ preds_st1 }}
+    {{ preds_st2 }}
+  {% endif %}
+
+    </div>
+    {% endblock %}
+

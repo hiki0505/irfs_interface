@@ -1,0 +1,16 @@
+  
+{% extends 'irfs/base.html' %}
+{% block content%}
+<div class="accordion-wrapper">
+
+  <form class="Form" name="form" role="form" method="post" action="staging">
+      {% csrf_token %}
+      <div class="Form-title">Calculate Staging:<br></div>
+      <div class="Form-buttonContainer">
+          <button class="Form-button">SUBMIT</button>
+      </div>
+  </form>
+
+
+</div>
+{% endblock %}
