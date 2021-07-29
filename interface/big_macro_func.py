@@ -97,8 +97,10 @@ def big_macro_function(st1, st2, data_macro, repd_period):
     temp1 = (temp1 - temp1.min()) / (temp1.max() - temp1.min())
     temp2 = (temp2 - temp2.min()) / (temp2.max() - temp2.min())
 
-    st1['rate2'] = temp1
-    st2['rate2'] = temp2
+    # st1['rate2'] = temp1
+    # st2['rate2'] = temp2
+
+    #st1['rate2']=np.log(st1['RATE']) - np.log(1-st1['RATE'])
 
     st1.rate2 = temp1.reset_index().drop('index', axis=1)
     st2.rate2 = temp2.reset_index().drop('index', axis=1)

@@ -33,10 +33,10 @@ def staging_calculator(db_credentials, ifrs_creds, repd_end):
     aop_m = ifrs_creds['aop_m']  # overdue principal amount in manats
     aop_c = ifrs_creds['aop_c']  # overdue principal amount in currency
 
-    # ani_m =  # normal interest amount in manats
-    # ani_c =  # normal interest amount in currency
-    # aoi_m =  # overdue interest amount in manats
-    # aoi_c =  # overdue interest amount in currency
+    ani_m = ifrs_creds['ani_m']  # normal interest amount in manats
+    ani_c = ifrs_creds['ani_c']  # normal interest amount in currency
+    aoi_m = ifrs_creds['aoi_m']  # overdue interest amount in manats
+    aoi_c = ifrs_creds['aoi_c']  # overdue interest amount in currency
 
     aor_m = ifrs_creds['aor_m']  # original amount in manats
     aor_c = ifrs_creds['aor_c']  # original amount in currency

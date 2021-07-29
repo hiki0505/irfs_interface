@@ -73,6 +73,11 @@ class Ifrs(models.Model):
 
 
 class Plist(models.Model):
+    MEASURES_CHOICES = (
+        ('pd', 'pd'),
+        ('lgd', 'lgd')
+    )
+    measure = models.CharField(default='pd', max_length=50, choices=MEASURES_CHOICES)
     name = models.CharField(max_length=255)
     product_code = models.CharField(max_length=255)
     # class Meta:

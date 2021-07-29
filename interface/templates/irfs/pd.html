@@ -6,8 +6,14 @@
              <input type="checkbox" name="radio-a" id="check1">
                 <label class="accordion-label" for="check1">P-LIST ADDITION</label>
                     <div class="accordion-content">
-                        <form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="plist_save">
+                        <form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="pd_plist_save">
                             {% csrf_token %}
+                            <div class="plist_container">
+<!--                                {% for pd_l in pd_list %}-->
+<!--                                <label class="p_label">{{pd_l.name}}<br></label>-->
+<!--                                <label class="p_label">{{pd_l.product_code}}<br></label>-->
+<!--                                {% endfor %}-->
+                            </div>
                             <div class="Form-title">Add p-list as list:<br></div>
                                 <div class="plist_container">
                                   <table class="_table" id="plist_table">
@@ -25,12 +31,13 @@
                                       </tr>
                                     </thead>
                                     <tbody id="table_body">
+                                    {% for pd_l in pd_list %}
                                       <tr>
                                         <td>
-                                          <input type="text" class="form_control" name="client_name" placeholder="Consumer">
+                                          <input type="text" class="form_control" name="pd_client_name" placeholder="Consumer" value="{{pd_l.name}}">
                                         </td>
                                         <td>
-                                          <input type="text" class="form_control" name="client_code" placeholder="18001, 18002, ...">
+                                          <input type="text" class="form_control" name="pd_client_code" placeholder="18001, 18002, ..." value="{{pd_l.product_code}}">
                                         </td>
                                         <td id="btn_brd">
                                           <div class="action_container">
@@ -40,6 +47,7 @@
                                           </div>
                                         </td>
                                       </tr>
+                                    {% endfor %}
                                     </tbody>
                                   </table>
                                 </div>

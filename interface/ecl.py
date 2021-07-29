@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import openpyxl
 
+
 def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     cons_pds = pd_cons
     # pension_pds = pd.read_pickle('pension_pds.pkl')
@@ -16,6 +17,9 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     # stages
     stages = stagings
 
+    # payments
+
+    payments = pd.read_pickle('payments.pkl')
 
     # portfolio
     portfolio = pd.read_pickle('port2020.pkl')  # QUESTION
@@ -37,11 +41,11 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     print(stages.STAGE.unique())
     print(stages.head())
 
-    # portfolio['EAD'] = portfolio.ESAS_RESID_AZN + portfolio.VK_ESAS_QALIQ_AZN + portfolio.PROCAZN + portfolio.PROCPROSAZN  # QUESTION
+    portfolio['EAD'] = portfolio.ESAS_RESID_AZN + portfolio.VK_ESAS_QALIQ_AZN + portfolio.FAIZ_QALIQ_AZN + portfolio.VK_FAIZ_QALIQ_AZN
     portfolio['EAD_PRIN'] = portfolio.ESAS_RESID_AZN + portfolio.VK_ESAS_QALIQ_AZN
-    # portfolio['EAD_INT'] = portfolio.PROCAZN + portfolio.PROCPROSAZN
-    # portfolio['EAD_LINE'] = np.where(portfolio.TIPKREDITA.isin(prod_cards),
-    #                                  0.5 * (portfolio.SUMMAKREAZN - portfolio.EAD), 0)
+    portfolio['EAD_INT'] = portfolio.FAIZ_QALIQ_AZN + portfolio.VK_FAIZ_QALIQ_AZN
+    portfolio['EAD_LINE'] = np.where(portfolio.FEA_KODU.isin(prod_cards),  # QUESTION
+                                     0.5 * (portfolio.ESAS_INIT_AZN - portfolio.EAD), 0)
     portfolio['EAD_TOTAL_WITH_LINES'] = portfolio.EAD + portfolio.EAD_LINE
 
     portfolio = portfolio[portfolio.EAD_TOTAL_WITH_LINES != 0]
@@ -50,9 +54,9 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     # new interest rate
 
-    portfolio['ADJ_INT_RATE'] = np.where(portfolio.PROCSTAVKRE == 1, 15, portfolio.PROCSTAVKRE)
+    portfolio['ADJ_INT_RATE'] = np.where(portfolio.FAIZ == 1, 15, portfolio.FAIZ)  # QUESTION
 
-    portfolio['ADJ_INT_RATE_24'] = np.where(portfolio.PROCSTAVKRE == 1, 24, portfolio.PROCSTAVKRE)
+    portfolio['ADJ_INT_RATE_24'] = np.where(portfolio.FAIZ == 1, 24, portfolio.FAIZ)  # QUESTION
 
     # collateral and EAD
 
@@ -62,35 +66,35 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     pmetals = [4]
 
     # REAL ESTATE
-    portfolio['COLL_REAL'] = np.where(portfolio.TIPZALOGA.isin(real_est), portfolio.SUMMA_ZALOGAAZN, 0)
-    portfolio['COLL_REAL_HAIRCUT_80'] = np.where(portfolio.TIPZALOGA.isin(real_est), 0.8 * portfolio.SUMMA_ZALOGAAZN, 0)
+    portfolio['COLL_REAL'] = np.where(portfolio.GIROV_NOVU.isin(real_est), portfolio.GIROV_MEBLEG_AZN, 0)
+    portfolio['COLL_REAL_HAIRCUT_80'] = np.where(portfolio.GIROV_NOVU.isin(real_est), 0.8 * portfolio.GIROV_MEBLEG_AZN, 0)
 
-    portfolio['COLL_REAL_HAIRCUT_80_DISC_15_4Y'] = np.where(portfolio.TIPZALOGA.isin(real_est),
-                                                            0.8 * portfolio.SUMMA_ZALOGAAZN * np.power(
+    portfolio['COLL_REAL_HAIRCUT_80_DISC_15_4Y'] = np.where(portfolio.GIROV_NOVU.isin(real_est),
+                                                            0.8 * portfolio.GIROV_MEBLEG_AZN * np.power(
                                                                 1 + portfolio.ADJ_INT_RATE / 1200, -48), 0)
 
-    portfolio['COLL_REAL_HAIRCUT_80_DISC_24_4Y'] = np.where(portfolio.TIPZALOGA.isin(real_est),
-                                                            0.8 * portfolio.SUMMA_ZALOGAAZN * np.power(
+    portfolio['COLL_REAL_HAIRCUT_80_DISC_24_4Y'] = np.where(portfolio.GIROV_NOVU.isin(real_est),
+                                                            0.8 * portfolio.GIROV_MEBLEG_AZN * np.power(
                                                                 1 + portfolio.ADJ_INT_RATE_24 / 1200, -48), 0)
 
     # DEPOSITS
-    portfolio['COLL_DEPO'] = np.where(portfolio.TIPZALOGA.isin(depo), portfolio.SUMMA_ZALOGAAZN, 0)
+    portfolio['COLL_DEPO'] = np.where(portfolio.GIROV_NOVU.isin(depo), portfolio.GIROV_MEBLEG_AZN, 0)
 
     # SECURITIES
-    portfolio['COLL_SEC'] = np.where(portfolio.TIPZALOGA.isin(sec), portfolio.SUMMA_ZALOGAAZN, 0)
-    portfolio['COLL_SEC_HAIRCUT_70'] = np.where(portfolio.TIPZALOGA.isin(sec), 0.7 * portfolio.SUMMA_ZALOGAAZN, 0)
+    portfolio['COLL_SEC'] = np.where(portfolio.GIROV_NOVU.isin(sec), portfolio.GIROV_MEBLEG_AZN, 0)
+    portfolio['COLL_SEC_HAIRCUT_70'] = np.where(portfolio.GIROV_NOVU.isin(sec), 0.7 * portfolio.GIROV_MEBLEG_AZN, 0)
 
     # PRECIOUS METALS
-    portfolio['COLL_PMET'] = np.where(portfolio.TIPZALOGA.isin(pmetals), portfolio.SUMMA_ZALOGAAZN, 0)
+    portfolio['COLL_PMET'] = np.where(portfolio.GIROV_NOVU.isin(pmetals), portfolio.GIROV_MEBLEG_AZN, 0)
 
-    portfolio['COLL_PMET_HAIRCUT_80'] = np.where(portfolio.TIPZALOGA.isin(pmetals), 0.8 * portfolio.SUMMA_ZALOGAAZN, 0)
+    portfolio['COLL_PMET_HAIRCUT_80'] = np.where(portfolio.GIROV_NOVU.isin(pmetals), 0.8 * portfolio.GIROV_MEBLEG_AZN, 0)
 
-    portfolio['COLL_PMET_HAIRCUT_80_DISC_15_1Y'] = np.where(portfolio.TIPZALOGA.isin(pmetals),
-                                                            0.8 * portfolio.SUMMA_ZALOGAAZN * np.power(
+    portfolio['COLL_PMET_HAIRCUT_80_DISC_15_1Y'] = np.where(portfolio.GIROV_NOVU.isin(pmetals),
+                                                            0.8 * portfolio.GIROV_MEBLEG_AZN * np.power(
                                                                 1 + portfolio.ADJ_INT_RATE / 1200, -12), 0)
 
-    portfolio['COLL_PMET_HAIRCUT_80_DISC_24_1Y'] = np.where(portfolio.TIPZALOGA.isin(pmetals),
-                                                            0.8 * portfolio.SUMMA_ZALOGAAZN * np.power(
+    portfolio['COLL_PMET_HAIRCUT_80_DISC_24_1Y'] = np.where(portfolio.GIROV_NOVU.isin(pmetals),
+                                                            0.8 * portfolio.GIROV_MEBLEG_AZN * np.power(
                                                                 1 + portfolio.ADJ_INT_RATE_24 / 1200, -12), 0)
 
     # SOME TOTALS
@@ -140,11 +144,31 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     # new rest date
 
-    portfolio['REST_NEW'] = np.where(portfolio.PROCSTAVKRE == 1, portfolio.DATE_OPEN, portfolio.DATE_RESTRUCTURE)
+    portfolio['REST_NEW'] = np.where(portfolio.FAIZ == 1, portfolio.DATE_START, portfolio.DATE_REST)
 
     # solving stage issue
 
-    portfolio = portfolio.merge(stages[['CLIENT_ID', 'STAGE']], how='left', left_on='LICSCHKRE', right_on='CLIENT_ID')
+    portfolio = portfolio.merge(stages[['CLIENT_ID', 'STAGE']], how='left', left_on='KREDIT_HESABI', right_on='CLIENT_ID')
 
     portfolio['FINAL_STAGE'] = np.where(portfolio.PROCSTAVKRE == 1, 'POCI', portfolio.STAGE)
+
+    print(portfolio.FINAL_STAGE.unique())
+
+    print(payments.head())
+
+    payments['TOTAL_PAY'] = payments.PRIN + payments.INT
+    pmt = payments[['CONTRACT_ID', 'YR', 'TOTAL_PAY']].pivot(index='CONTRACT_ID', columns='YR', values='TOTAL_PAY')
+
+    portfolio = portfolio.merge(pmt, how='left', left_on='KOD', right_index=True)
+
+    portfolio['EAD_1'] = portfolio.EAD_TOT_ADJ_24
+
+    for i in range(2, 30):
+        portfolio['EAD_' + str(i)] = np.where(portfolio.FINAL_STAGE.isin(['1', '3', 'POCI']), 0,
+                                              np.where(
+                                                  portfolio['EAD_' + str(i - 1)] - np.where(portfolio[i - 1].isna(), 0,
+                                                                                            portfolio[i - 1]) < 0, 0,
+                                                  portfolio['EAD_' + str(i - 1)] - np.where(portfolio[i - 1].isna(), 0,
+                                                                                            portfolio[i - 1])))
+
 

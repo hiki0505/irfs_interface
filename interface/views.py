@@ -24,11 +24,11 @@ class DatabaseConnectionError(Exception):
     pass
 
 
-PLIST_GLOBS = {
-    'consumer': "(01801, 02201, 02203, 02800, 02801, 02803, 02805)",
-    'corporate': "(01821, 01803, 01805, 01806, 01807, 01808, 01855, 01856, 01857, 01858, 02002, 02004, 02009, 02014, 02017, 02100, 02102, 02103, 02201, 02203, 02300, 02304, 02400, 02600) and must_novu not like 'F%Z%K%'",
-    'sole': "(01821, 01803, 01805, 01806, 01807, 01808, 01855, 01856, 01857, 01858, 02002, 02004, 02009, 02014, 02017, 02100, 02102, 02103, 02300, 02304, 02400, 02600) and must_novu like 'F%Z%K%'"
-}
+# PLIST_GLOBS = {
+#     'consumer': "(01801, 02201, 02203, 02800, 02801, 02803, 02805)",
+#     'corporate': "(01821, 01803, 01805, 01806, 01807, 01808, 01855, 01856, 01857, 01858, 02002, 02004, 02009, 02014, 02017, 02100, 02102, 02103, 02201, 02203, 02300, 02304, 02400, 02600) and must_novu not like 'F%Z%K%'",
+#     'sole': "(01821, 01803, 01805, 01806, 01807, 01808, 01855, 01856, 01857, 01858, 02002, 02004, 02009, 02014, 02017, 02100, 02102, 02103, 02300, 02304, 02400, 02600) and must_novu like 'F%Z%K%'"
+# }
 
 FEATURES = ['DATE_OPER', 'REST_NEW', 'DATE_OPEN', 'DATE_PLANCLOSE', 'DATEOFBIRTH', 'OVERDUEDAY',
             'INTEREST_OVERDUEDAY', 'SUMMAAZN', 'SUMMA', 'SUMMA_19AZN', 'SUMMA_19', 'PROCAZN', 'PROC', 'PROCPROSAZN',
@@ -167,8 +167,11 @@ def calculate(request):
         queryset2 = DatabaseCredentials.objects
         db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
         print(db_credentials)
-        for i, j in PLIST_GLOBS.items():
-            pd_df_list[i] = pd_calculator(db_credentials, values[0], j, repd_start, repd_end)
+        # for i, j in PLIST_GLOBS.items():
+        #     pd_df_list[i] = pd_calculator(db_credentials, values[0], j, repd_start, repd_end)
+        for pd_plist in Plist.objects.filter(measure='pd'):
+            pd_df_list[pd_plist.name] = pd_calculator(db_credentials, values[0], pd_plist.product_code, repd_start,
+                                                      repd_end)
         # print('tut budet to wto nado')
         # print(pd_df_list['consumer'][0])
         # print(pd_df_list['consumer'][1])
@@ -215,29 +218,71 @@ def calculate(request):
         return render(request, 'irfs/pd.html', context=context)
         # return HttpResponse(df_html)
     else:
-        return render(request, 'irfs/pd.html')
+        pd_list = Plist.objects.filter(measure='pd')
+        return render(request, 'irfs/pd.html', context={'pd_list': pd_list})
 
 
-def plist_save(request):
+def pd_plist_save(request):
     if request.method == 'POST':
-        names = ast.literal_eval(str(request.POST.getlist('client_name')))
-        codes = ast.literal_eval(str(request.POST.getlist('client_code')))
+        names = ast.literal_eval(str(request.POST.getlist('pd_client_name')))
+        codes = ast.literal_eval(str(request.POST.getlist('pd_client_code')))
         # print(type(names), names)
         # print(type(codes), codes)
 
         plists = dict(zip(names, codes))
         # print(plists)
+        haven_plists = Plist.objects.all()
         for name, code in plists.items():
-            plists = Plist()
-            plists.name = name
-            plists.product_code = code
-            plists.save()
-
+            filtered = haven_plists.filter(measure='pd', name=name)
+            if filtered:
+                filtered.update(product_code=code)
+            else:
+                plists = Plist()
+                plists.name = name
+                plists.product_code = code
+                plists.measure = 'pd'
+                plists.save()
         context = {'pl_success': 'Plists saved successfully!'}
 
         return render(request, 'irfs/pd.html', context=context)
 
     return render(request, 'irfs/pd.html')
+
+
+def lgd_plist_save(request):
+    if request.method == 'POST':
+        names = ast.literal_eval(str(request.POST.getlist('lgd_client_name')))
+        codes = ast.literal_eval(str(request.POST.getlist('lgd_client_code')))
+        # print(type(names), names)
+        # print(type(codes), codes)
+
+        plists = dict(zip(names, codes))
+        haven_plists = Plist.objects.all()
+        # print(plists)
+        for name, code in plists.items():
+            filtered = haven_plists.filter(measure='lgd', name=name)
+            if filtered:
+                filtered.update(product_code=code)
+            else:
+                plists = Plist()
+                plists.name = name
+                plists.product_code = code
+                plists.measure = 'lgd'
+                plists.save()
+
+        context = {'pl_success': 'Plists saved successfully!'}
+
+        return render(request, 'irfs/lgd.html', context=context)
+
+    return render(request, 'irfs/lgd.html')
+
+
+def macro_calc(pd_data):
+    data = pd.read_json(pd_data, orient='index')
+    act_date = pd.to_datetime(data.ACT_DATE, unit='ms')
+    data['DATE_OPER'] = act_date
+    data.drop('ACT_DATE', axis=1, inplace=True)
+    return data
 
 
 def upload(request):
@@ -246,21 +291,28 @@ def upload(request):
         uploaded_file = request.FILES['document']
         pd_data_dict = request.session.get('pd_data_dict')
         print(pd_data_dict)
-        dataframe1 = pd.read_json(pd_data_dict['consumer'][0], orient='index')
-        dataframe2 = pd.read_json(pd_data_dict['consumer'][1], orient='index')
-        act_date1 = pd.to_datetime(dataframe1.ACT_DATE, unit='ms')
-        act_date2 = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
-        dataframe1['DATE_OPER'] = act_date1
-        dataframe2['DATE_OPER'] = act_date2
-        dataframe1.drop('ACT_DATE', axis=1, inplace=True)
-        dataframe2.drop('ACT_DATE', axis=1, inplace=True)
-
-        overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(dataframe1, dataframe2, uploaded_file,
-                                                                                  queryset.repd_period)
-        print(overall_pd_st1, overall_pd_st2, preds_st1, preds_st2)
-        context = {'overall_pd_st1': overall_pd_st1, 'overall_pd_st2': overall_pd_st2, 'preds_st1': preds_st1,
-                   'preds_st2': preds_st2}
-        return render(request, 'irfs/upload.html', context=context)
+        for pd_list in Plist.objects.filter(measure='pd'):
+            dataframe1 = macro_calc(pd_data_dict[pd_list.name][0])
+            dataframe2 = macro_calc(pd_data_dict[pd_list.name][1])
+            overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(dataframe1, dataframe2,
+                                                                                      uploaded_file,
+                                                                                      queryset.repd_period)
+            print(overall_pd_st1, overall_pd_st2, preds_st1, preds_st2)
+        # dataframe1 = pd.read_json(pd_data_dict['consumer'][0], orient='index')
+        # dataframe2 = pd.read_json(pd_data_dict['consumer'][1], orient='index')
+        # act_date1 = pd.to_datetime(dataframe1.ACT_DATE, unit='ms')
+        # act_date2 = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
+        # dataframe1['DATE_OPER'] = act_date1
+        # dataframe2['DATE_OPER'] = act_date2
+        # dataframe1.drop('ACT_DATE', axis=1, inplace=True)
+        # dataframe2.drop('ACT_DATE', axis=1, inplace=True)
+        #
+        # overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(dataframe1, dataframe2, uploaded_file,
+        #                                                                           queryset.repd_period)
+        # print(overall_pd_st1, overall_pd_st2, preds_st1, preds_st2)
+        # context = {'overall_pd_st1': overall_pd_st1, 'overall_pd_st2': overall_pd_st2, 'preds_st1': preds_st1,
+        #            'preds_st2': preds_st2}
+        return render(request, 'irfs/upload.html')
 
     return render(request, 'irfs/upload.html')
     # queryset = Ifrs.objects
@@ -296,13 +348,17 @@ def lgd(request):
         repd_rec_date_ns = repd_rec_date.strftime("%d-%b-%y")
         print(repd_rec_date_ns)
 
-        for i, j in PLIST_GLOBS.items():
-            lgd_df_list[i] = lgd_calculator(db_credentials, values[0], j, repd_rec_date_ns)
+        # for i, j in PLIST_GLOBS.items():
+        #     lgd_df_list[i] = lgd_calculator(db_credentials, values[0], j, repd_rec_date_ns)
+        for lgd_plist in Plist.objects.filter(measure='lgd'):
+            lgd_df_list[lgd_plist.name] = lgd_calculator(db_credentials, values[0], lgd_plist.product_code,
+                                                         repd_rec_date_ns)
 
         print(lgd_df_list)
         return render(request, 'irfs/lgd.html')
 
-    return render(request, 'irfs/lgd.html')
+    lgd_list = Plist.objects.filter(measure='lgd')
+    return render(request, 'irfs/lgd.html', context={'lgd_list': lgd_list})
 
 
 def staging(request):
@@ -320,4 +376,3 @@ def staging(request):
         return render(request, 'irfs/staging.html')
 
     return render(request, 'irfs/staging.html')
-

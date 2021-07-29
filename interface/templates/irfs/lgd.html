@@ -6,11 +6,13 @@
              <input type="checkbox" name="radio-a" id="check1">
                 <label class="accordion-label" for="check1">P-LIST ADDITION FOR LGD</label>
                     <div class="accordion-content">
-                        <form class="Form" name="form" role="form" method="post" action="">
+                        <form class="Form" name="form" role="form" method="post" enctype="multipart/form-data" action="lgd_plist_save">
                             {% csrf_token %}
                             <div class="plist_container">
-                                <label class="p_label">Name:</label>
-                                <label class="p_label">Plist</label>
+<!--                                {% for code in lgd_plist.values %}-->
+<!--                                <label class="p_label">{{code.name}}<br></label>-->
+<!--                                <label class="p_label">{{code.product_code}}<br></label>-->
+<!--                                {% endfor %}-->
                             </div>
                             <div class="Form-title">Add p-list as list:<br></div>
                                 <div class="plist_container">
@@ -29,12 +31,13 @@
                                       </tr>
                                     </thead>
                                     <tbody id="table_body">
+                                    {% for lgd_l in lgd_list %}
                                       <tr>
                                         <td>
-                                          <input type="text" class="form_control" name="client_name" placeholder="Consumer">
+                                          <input type="text" class="form_control" name="lgd_client_name" placeholder="Consumer" value="{{lgd_l.name}}">
                                         </td>
                                         <td>
-                                          <input type="text" class="form_control" name="client_code" placeholder="18001, 18002, ...">
+                                          <input type="text" class="form_control" name="lgd_client_code" placeholder="18001, 18002, ..." value="{{lgd_l.product_code}}">
                                         </td>
                                         <td id="btn_brd">
                                           <div class="action_container">
@@ -44,9 +47,15 @@
                                           </div>
                                         </td>
                                       </tr>
+                                    {% endfor %}
                                     </tbody>
                                   </table>
                                 </div>
+                            {% if pl_success %}
+								{{ pl_success }}
+								<br />
+								<br />
+                            {% endif %}
                             <div class="Form-buttonContainer">
                                 <button class="Form-button">ADD P-LIST</button>
                             </div>

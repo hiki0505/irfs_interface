@@ -14,7 +14,8 @@ urlpatterns = [
     url('dbconn_view', views.dbconn_view, name='dbconn_view'),
     url('calculate', views.calculate, name='calculate'),
     url('upload', views.upload, name='upload'),
-    url('plist_save', views.plist_save, name='plist_save'),
+    url('pd_plist_save', views.pd_plist_save, name='pd_plist_save'),
+    url('lgd_plist_save', views.lgd_plist_save, name='lgd_plist_save'),
     url('lgd', views.lgd, name='lgd'),
     url('staging', views.staging, name='staging')
 ]
