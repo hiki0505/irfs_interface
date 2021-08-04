@@ -10,7 +10,9 @@ import pickle
 
 
 def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
-    conn = co.connect(u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'], db_credentials['dbname']))
+    conn = co.connect(
+        u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'],
+                              db_credentials['dbname']))
 
     cursor = conn.cursor()
     cursor.execute(""" ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS' """)
@@ -56,16 +58,18 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
 
     temp_table_sql = """
     DECLARE
-        Table_exists INTEGER; 
+        Table_exists INTEGER;
     BEGIN
-    
+
         SELECT COUNT(*) INTO Table_exists FROM sys.all_tables WHERE table_name = 'SHABZUL2';
-    
-        IF (table_exists) = 1 
+
+        IF (table_exists) = 1
         THEN
-            DBMS_OUTPUT.PUT_LINE('WANNA DROP TABLE AND CREATE AGAIN'); 
-            EXECUTE IMMEDIATE 'DROP TABLE shabzul2'; 
-            EXECUTE IMMEDIATE 'CREATE TABLE shabzul2 (act_date VARCHAR(500),
+            DBMS_OUTPUT.PUT_LINE('WANNA DROP TABLE AND CREATE AGAIN');
+            EXECUTE IMMEDIATE 'DROP TABLE shabzul2';
+            EXECUTE IMMEDIATE 'CREATE TABLE shabzul2 (
+                                                 id NUMBER GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1),
+                                                 act_date DATE,
                                                  par_status VARCHAR(100),
                                                  original NUMBER(10, 0),
                                                  c0 NUMBER(38, 7),
@@ -73,10 +77,12 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
                                                  paid NUMBER(38, 7)
                                                  )';
             commit;
-            DBMS_OUTPUT.PUT_LINE('Table Dropped and Re-Created!'); 
+            DBMS_OUTPUT.PUT_LINE('Table Dropped and Re-Created!');
         ELSE
             DBMS_OUTPUT.PUT_LINE('WANNA JUST CREATE');
-            EXECUTE IMMEDIATE 'CREATE TABLE shabzul2 (act_date VARCHAR(500),
+            EXECUTE IMMEDIATE 'CREATE TABLE shabzul2 (
+                                                 id NUMBER GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1),
+                                                 act_date DATE,
                                                  par_status VARCHAR(100),
                                                  original NUMBER(10, 0),
                                                  c0 NUMBER(38, 7),
@@ -84,15 +90,20 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
                                                  paid NUMBER(38, 7)
                                                  )';
             commit;
-            DBMS_OUTPUT.PUT_LINE('New Table Created!'); 
-        END IF; 
+            DBMS_OUTPUT.PUT_LINE('New Table Created!');
+        END IF;
     END;
     """
+    cursor.execute(temp_table_sql)
+    conn.commit()
 
     p1 = "select * from "
 
-    new_query = '''
-        insert into shabzul2 (
+    # p2 = ""
+
+    for i in ddm.ACT_DATE[(ddm.ACT_DATE <= act_date)]:
+        p2 = """insert into shabzul2 (
+         act_date,
          par_status,
          original,
          c0,
@@ -101,10 +112,10 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
         select t1.act_date, t1.par_status, sum(t1.amt) as original, 
         sum(case when t2.par_status = '0' then t2.amt else 0 end)/sum(t1.amt) as c0,
         sum(case when t2.par_status = '1_' then t2.amt else 0 end)/sum(t1.amt) as loss,
-        
+
         1-sum(case when t2.par_status = '0' then t2.amt else 0 end)/sum(t1.amt)-
         sum(case when t2.par_status = '1_' then t2.amt else 0 end)/sum(t1.amt) as paid
-        
+
         from
         (select act_date, kredit_hesabi as acc, subhesab as acc2,
         case 
@@ -132,55 +143,61 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
         esas_resid_azn + vk_esas_qaliq_azn as amt
         from {dbt} where act_date = add_months(to_date('{i}', 'YYYY/MM/DD HH24:MI:SS'),12)) t2
         on t1.acc = t2.acc and t1.acc2=t2.acc2
-        group by t1.act_date, t1.par_status
-    
-    '''
+        group by t1.act_date, t1.par_status""".format(dbt=dbt, i=i, pid=pid, plist=plist)
+        cursor.execute(p2)
+        conn.commit()
 
-    p2 = ""
+    cursor.execute('''
+    ALTER TABLE shabzul2
+    ADD cl NUMBER(38,7)
+    ''')
+    conn.commit()
 
-
-    for i in ddm.ACT_DATE[(ddm.ACT_DATE <= act_date)]:
-        p2 += """ union (select t1.act_date, t1.par_status, sum(t1.amt) as original, 
-        sum(case when t2.par_status = '0' then t2.amt else 0 end)/sum(t1.amt) as c0,
-        sum(case when t2.par_status = '1_' then t2.amt else 0 end)/sum(t1.amt) as loss,
+    cursor.execute('''
+        DECLARE
+        CURSOR cur 
+        IS
+            SELECT loss, id 
+            FROM shabzul2;
+            maxloss NUMBER(38,7);
+        --    product_ VARCHAR(500);
+            loss_ NUMBER(38,7);
+            id_ NUMBER(38,7);
+        BEGIN
+        OPEN cur;
+        LOOP
+        FETCH cur INTO loss_, id_;
+        IF cur%NOTFOUND
+        THEN
+        EXIT;
+        END IF;
         
-        1-sum(case when t2.par_status = '0' then t2.amt else 0 end)/sum(t1.amt)-
-        sum(case when t2.par_status = '1_' then t2.amt else 0 end)/sum(t1.amt) as paid
+        IF id_ = 1 THEN
+            maxloss := loss_;
+        ElSE
+            IF loss_ > maxloss
+            THEN
+                maxloss := loss_;
+            ELSE maxloss := maxloss;
+            END IF;
+        END IF;
+        UPDATE shabzul2 SET cl = maxloss WHERE id = id_;
         
-        from
-        (select act_date, kredit_hesabi as acc, subhesab as acc2,
-        case 
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) = 0 then '00_0'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 1 and 90 then '01_1_90'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 91 and 120 then '02_91_120'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 121 and 150 then '03_121_150'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 151 and 180 then '04_151_180'    
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 181 and 210 then '05_181_210'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 211 and 240 then '06_211_240'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 241 and 270 then '07_241_270'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 271 and 300 then '08_271_300'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 301 and 330 then '09_301_330'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 331 and 360 then '10_331_360'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) > 360 then '11_360_'
-        end as par_status,
-        esas_resid_azn + vk_esas_qaliq_azn as amt
-        from {dbt} where act_date='{i}' and odeme_qaydasi='A' and {pid} in {plist}) t1 
-        left join
-        (select kredit_hesabi as acc, subhesab as acc2, 
-        case 
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) = 0 then '0'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) > 1 then '1_'
-        end as par_status,
-        esas_resid_azn + vk_esas_qaliq_azn as amt
-        from {dbt} where act_date = add_months(to_date('{i}', 'YYYY/MM/DD HH24:MI:SS'),12)) t2
-        on t1.acc = t2.acc and t1.acc2=t2.acc2
-        group by t1.act_date, t1.par_status) """.format(dbt=dbt, i=i, pid=pid, plist=plist)
+        END LOOP;
+        CLOSE cur;
+        END;
+    ''')
 
-    sql = p1 + p2[7:] + "order by act_date, par_status"
 
+
+
+    # sql = p1 + p2[7:] + "order by act_date, par_status"
+    sql = "select * from shabzul2 order by id, act_date, par_status"
     data = pd.read_sql(sql, con=conn)
 
+
     return data
+
 
 '''
 

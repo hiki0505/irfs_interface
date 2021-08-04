@@ -19,7 +19,7 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     # payments
 
-    payments = pd.read_pickle('payments.pkl')
+    # payments = pd.read_pickle('payments.pkl')
 
     # portfolio
     portfolio = pd.read_pickle('port2020.pkl')  # QUESTION
@@ -150,16 +150,16 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     portfolio = portfolio.merge(stages[['CLIENT_ID', 'STAGE']], how='left', left_on='KREDIT_HESABI', right_on='CLIENT_ID')
 
-    portfolio['FINAL_STAGE'] = np.where(portfolio.PROCSTAVKRE == 1, 'POCI', portfolio.STAGE)
+    portfolio['FINAL_STAGE'] = np.where(portfolio.FAIZ == 1, 'POCI', portfolio.STAGE)
 
     print(portfolio.FINAL_STAGE.unique())
 
-    print(payments.head())
+    # print(payments.head())
+    #
+    # payments['TOTAL_PAY'] = payments.PRIN + payments.INT
+    # pmt = payments[['CONTRACT_ID', 'YR', 'TOTAL_PAY']].pivot(index='CONTRACT_ID', columns='YR', values='TOTAL_PAY')
 
-    payments['TOTAL_PAY'] = payments.PRIN + payments.INT
-    pmt = payments[['CONTRACT_ID', 'YR', 'TOTAL_PAY']].pivot(index='CONTRACT_ID', columns='YR', values='TOTAL_PAY')
-
-    portfolio = portfolio.merge(pmt, how='left', left_on='KOD', right_index=True)
+    # portfolio = portfolio.merge(pmt, how='left', left_on='KOD', right_index=True)
 
     portfolio['EAD_1'] = portfolio.EAD_TOT_ADJ_24
 
@@ -171,4 +171,204 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
                                                   portfolio['EAD_' + str(i - 1)] - np.where(portfolio[i - 1].isna(), 0,
                                                                                             portfolio[i - 1])))
 
+    portfolio['FIN_DATE_CLOSE'] = portfolio[['DATE_END_CONTRACT', 'DATE_REST']].max(axis=1)
+
+    portfolio['MATURITY'] = np.select(
+        condlist=[
+            (((portfolio.FIN_DATE_CLOSE - portfolio.ACT_DATE) / np.timedelta64(1, 'Y') > 0) &
+             ((portfolio.FIN_DATE_CLOSE - portfolio.ACT_DATE) / np.timedelta64(1, 'Y') < 1) &
+             (portfolio.FINAL_STAGE == '2')),
+            ((portfolio.FIN_DATE_CLOSE - portfolio.ACT_DATE) / np.timedelta64(1, 'Y') > 0)],
+        choicelist=[1, (portfolio.FIN_DATE_CLOSE - portfolio.ACT_DATE) / np.timedelta64(1, 'Y')],
+        default=1)
+
+    # product and currency
+
+    portfolio['VALYUTA'] = np.where(portfolio.CURRENCY == 0, 'AZN', 'CURR')
+
+    lgs['VALYUTA'] = np.where(lgs.CURRENCY_ID == 0, 'AZN', 'CURR')  # question
+
+    portfolio['MEHSUL_PD'] = np.select(
+        condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards),
+                  portfolio.FEA_KODU.isin(prod_pensioner),
+                  portfolio.FEA_KODU.isin(prod_lomb),
+                  portfolio.FEA_KODU.isin(prod_micro),
+                  portfolio.FEA_KODU.isin(prod_sole),
+                  portfolio.FEA_KODU.isin(prod_corp)],
+        choicelist=['consumer', 'pensioner', 'lombard', 'micro', 'sole', 'corp']
+    )  # question
+
+    portfolio['MEHSUL_LGD'] = np.select(
+        condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards + prod_pensioner),
+                  portfolio.FEA_KODU.isin(prod_lomb + prod_micro),
+                  portfolio.FEA_KODU.isin(prod_sole),
+                  portfolio.FEA_KODU.isin(prod_corp)],
+        choicelist=['consumer', 'micro', 'sole', 'corp']
+    )  # question
+
+    print(cons_pds)
+
+    pds = pd.DataFrame(columns=['MEHSUL', 'PD_STAGE1', 'PD_STAGE2'])
+
+    pd_list = [cons_pds, pension_pds, lomb_pds, micro_pds, sole_pds, corp_pds]
+    pd_names = ['consumer', 'pensioner', 'lombard', 'micro', 'sole', 'corp']
+
+    for i in range(6):
+        pds.loc[i, 'MEHSUL'] = pd_names[i]
+        pds.loc[i, 'PD_STAGE1'] = pd_list[i].loc['total_pd', 'stage1']
+        pds.loc[i, 'PD_STAGE2'] = pd_list[i].loc['total_pd', 'stage2']
+
+    print(pds)
+
+    portfolio['LGD_BUCKET'] = np.select(
+        condlist=[portfolio.FINAL_STAGE == 'POCI',
+                  portfolio.ESAS_OVER_DAYS < 121,
+                  portfolio.ESAS_OVER_DAYS < 151,
+                  portfolio.ESAS_OVER_DAYS < 181,
+                  portfolio.ESAS_OVER_DAYS < 211,
+                  portfolio.ESAS_OVER_DAYS < 241,
+                  portfolio.ESAS_OVER_DAYS < 271,
+                  portfolio.ESAS_OVER_DAYS < 301,
+                  portfolio.ESAS_OVER_DAYS < 331,
+                  portfolio.ESAS_OVER_DAYS < 361,
+                  portfolio.ESAS_OVER_DAYS > 360],
+        choicelist=['10_360_', '01_90-120', '02_120-150', '03_150-180',
+                    '04_180-210', '05_210-240', '06_240-270', '07_270-300',
+                    '08_300-330', '09_330-360', '10_360_'],
+        default='10_360_'
+    )
+
+    portfolio = portfolio.merge(pds, how='left', left_on='MEHSUL_PD', right_on='MEHSUL')  # question
+    portfolio = portfolio.merge(lgs[['BUCKET', 'PRODUCT', 'VALYUTA', 'CONSISTENT LOSS']],
+                                how='left', left_on=['LGD_BUCKET', 'MEHSUL_LGD', 'VALYUTA'],
+                                right_on=['BUCKET', 'PRODUCT', 'VALYUTA'])
+
+    portfolio['LGD'] = np.where(portfolio['PRODUCT'].isna(), 0.54, portfolio['CONSISTENT LOSS'])
+    portfolio['LGD'] = np.where(portfolio.TOTAL_COLL_24 > 0, 1, portfolio.LGD)
+
+    portfolio['PD_GEN'] = np.select(
+        condlist=[
+            portfolio.FINAL_STAGE.isin(['3', 'POCI']),
+            portfolio.FINAL_STAGE == '2'
+        ],
+        choicelist=[
+            1, portfolio.PD_STAGE2
+        ],
+        default=portfolio.PD_STAGE1)
+
+    portfolio['PD_GEN_MATURITY_ADJ'] = np.select(
+        condlist=[
+            portfolio.FINAL_STAGE.isin(['3', 'POCI']),
+            portfolio.FINAL_STAGE == '2',
+            ((portfolio.FINAL_STAGE == '1') & (portfolio.MATURITY < 1))
+        ],
+        choicelist=[
+            portfolio.PD_GEN,
+            (1 - np.power(1 - portfolio.PD_GEN, portfolio.MATURITY)),
+            (1 - np.power(1 - portfolio.PD_GEN, portfolio.MATURITY))
+        ],
+        default=portfolio.PD_GEN)
+
+    # final PDs per year
+
+    ead_pd_list = []
+
+    for i in range(29):
+        portfolio['PD_' + str(i + 1)] = (1 - np.power(1 - portfolio.PD_GEN, i + 1)) - (
+                    1 - np.power(1 - portfolio.PD_GEN, i))
+        portfolio['EAD_PD_' + str(i + 1)] = portfolio['PD_' + str(i + 1)] * portfolio['EAD_' + str(i + 1)]
+        ead_pd_list.append('EAD_PD_' + str(i + 1))
+
+    portfolio['ECL_NOT_USED'] = portfolio[ead_pd_list].sum(axis=1) * portfolio.LGD
+
+    print(portfolio.ECL_NOT_USED.sum())
+
+    portfolio['SEP'] = ''
+
+    # DIFFERENT ECL-S
+
+    portfolio['ECL_15_NOMIN'] = portfolio.EAD_TOT_ADJ_15 * portfolio.PD_GEN_MATURITY_ADJ * portfolio.LGD
+
+    portfolio['ECL_24_NOMIN'] = portfolio.EAD_TOT_ADJ_24 * portfolio.PD_GEN_MATURITY_ADJ * portfolio.LGD
+
+    portfolio['ECL_15_MIN'] = portfolio.EAD_TOT_ADJ_MIN_BASED_15 * portfolio.PD_GEN_MATURITY_ADJ * portfolio.LGD
+
+    portfolio['ECL_24_MIN'] = portfolio.EAD_TOT_ADJ_MIN_BASED_24 * portfolio.PD_GEN_MATURITY_ADJ * portfolio.LGD
+
+    portfolio['ECL_15_NOMIN'].sum(), portfolio['ECL_24_NOMIN'].sum(), portfolio['ECL_15_MIN'].sum(), portfolio[
+        'ECL_24_MIN'].sum()
+
+    print(portfolio.columns.values)
+
+    # print(portfolio.FILIALNAME.unique())
+
+    subsetport = portfolio[['DATE_OPER', 'FILIALNUMBER',
+                            'LICSCHKRE', 'SUBSCHKRE', 'KOD', 'NAME_LICSCH', 'SUMMAKRE',
+                            'SUMMAKREAZN', 'DATE_OPEN', 'DATE_CLOSE', 'DATE_PLANCLOSE', 'FIN_DATE_CLOSE', 'SROK',
+                            'LGOTPERIOD',
+                            'PROCSTAVKRE', 'ADJ_INT_RATE', 'ADJ_INT_RATE_24',
+                            'VALYUTA', 'TIPKREDITA', 'NAME_TIPKREDITA', 'PRODUCT', 'MEHSUL', 'MEHSUL_PD',
+                            'MEHSUL_LGD',
+
+                            'SEP',
+
+                            'SUMMA', 'SUMMAAZN', 'SUMMA_19', 'SUMMA_19AZN', 'PROC', 'PROCAZN', 'PROCPROS',
+                            'PROCPROSAZN', 'OVERDUEDAY',
+                            'DATE_RESTRUCTURE', 'REST_NEW', 'KOLIC_RESTRUCTURE', 'DATE_PROLONG', 'KOLIC_PROLONG',
+
+                            'SEP',
+
+                            'TIPZALOGA', 'NAME_TIPZALOGA', 'SUMMA_ZALOGA',
+                            'SUMMA_ZALOGAAZN', 'KOLIC_PEREOCEN_ZALOGA',
+                            'SUMMA_PEREOCEN_ZALOGA', 'SUMMA_PEREOCEN_ZALOGAAZN',
+                            'DATA_PEREOCEN_ZALOGA',
+
+                            'SEP',
+
+                            'EAD', 'EAD_PRIN', 'EAD_INT', 'EAD_LINE',
+                            'EAD_TOTAL_WITH_LINES',
+
+                            'COLL_REAL', 'COLL_REAL_HAIRCUT_80',
+                            'COLL_REAL_HAIRCUT_80_DISC_15_4Y',
+                            'COLL_REAL_HAIRCUT_80_DISC_24_4Y', 'COLL_DEPO', 'COLL_SEC',
+                            'COLL_SEC_HAIRCUT_70', 'COLL_PMET', 'COLL_PMET_HAIRCUT_80',
+                            'COLL_PMET_HAIRCUT_80_DISC_15_1Y',
+                            'COLL_PMET_HAIRCUT_80_DISC_24_1Y',
+
+                            'SEP',
+                            'TOTAL_COLL_15', 'TOTAL_COLL_24',
+
+                            'SEP',
+
+                            'FINAL_STAGE', 'PD_GEN',
+
+                            'SEP',
+
+                            'EAD_TOT_ADJ_15', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET', 'CONSISTENT LOSS', 'LGD',
+                            'ECL_15_NOMIN',
+
+                            'SEP',
+
+                            'EAD_TOT_ADJ_24', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET', 'CONSISTENT LOSS', 'LGD',
+                            'ECL_24_NOMIN',
+
+                            'SEP',
+
+                            'EAD_TOT_ADJ_MIN_BASED_15', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET',
+                            'CONSISTENT LOSS', 'LGD', 'ECL_15_MIN',
+
+                            'SEP',
+
+                            'EAD_TOT_ADJ_MIN_BASED_24', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET',
+                            'CONSISTENT LOSS', 'LGD', 'ECL_24_MIN'
+
+                            ]]
+
+    subsetport[subsetport.MEHSUL_PD == '0']
+
+    print(subsetport.dtypes)
+
+    # subsetport.pivot_table(index=['MEHSUL_PD', 'FINAL_STAGE'],
+    #                        values=['EAD', 'EAD_TOTAL_WITH_LINES', 'ECL_24_MIN', 'ECL_24_NOMIN'],
+    #                        aggfunc='sum', margins=True)
 

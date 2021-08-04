@@ -15,7 +15,7 @@ from .services import db_connection
 import pprint
 from .models import DatabaseCredentials, Ifrs, Plist
 from .pd_script import pd_calculator
-from .lgd import lgd_calculator
+from .lgd2 import lgd_calculator
 from .staging import staging_calculator
 from .big_macro_func import big_macro_function
 
