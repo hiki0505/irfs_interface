@@ -1,15 +1,21 @@
 {% extends 'irfs/base.html' %}
 {% block content%}
+
 <div class="accordion-wrapper">
-
-  <form class="Form" name="form" role="form" method="post" action="staging">
-      {% csrf_token %}
-      <div class="Form-title">Calculate Staging:<br></div>
-      <div class="Form-buttonContainer">
-          <button class="Form-button">SUBMIT</button>
-      </div>
-  </form>
-
-
+    <div class="accordion">
+         <input type="checkbox" name="radio-a" id="check1">
+            <label class="accordion-label" for="check1">STAGING</label>
+                <div class="accordion-content">
+                    <form class="Form" name="form" role="form" method="post" action="staging">
+                        {% csrf_token %}
+                        <div class="Form-title">Calculate Staging:<br></div>
+                        <div class="Form-buttonContainer">
+                            <button class="Form-button">CALCULATE</button>
+                        </div>
+                    </form>
+                </div>
+    </div>
 </div>
+
+
 {% endblock %}

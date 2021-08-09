@@ -17,6 +17,12 @@
     padding: 2px 5px;
 }
 
+.plist {
+    border: none;
+    width: 100%;
+    padding: 2px 5px;
+}
+
 #btn_brd {
     border: none;
 }

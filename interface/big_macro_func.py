@@ -38,15 +38,16 @@ def big_macro_function(st1, st2, data_macro, repd_period):
     def period_detector(period):
         return 12 if period == 'yearly' else 1
 
-
     def prepare_data(data):
         data['act_end'] = data['DATE_OPER'].apply(lambda x: x - pd.DateOffset(months=period_detector(repd_period)))
         data['month'] = dtIndex(data.DATE_OPER).month
         data['time_index'] = dtIndex(data.DATE_OPER).year.astype('str') + dtIndex(data.DATE_OPER).month.astype('str')
         data['time_index2'] = dtIndex(data.act_end).year.astype('str') + dtIndex(data.act_end).month.astype('str')
-        # data['RATE'].replace(0, 0.0000001)
+        data['RATE'] = data['RATE'].replace(0, 0.0000001)
         # print(dt)-
         data['rate2'] = np.log(data.RATE) - np.log(1 - data.RATE)
+        data = data[
+            ((data.rate2 != np.nan) & (abs(data.rate2) != np.inf) & (data.ORIG_COUNT > 4) & (data.ORIG_AMOUNT > 0))]
         # data = data.loc[data['rate2'] != np.nan, :]
         print(data)
         print('burdadi')
@@ -100,7 +101,7 @@ def big_macro_function(st1, st2, data_macro, repd_period):
     # st1['rate2'] = temp1
     # st2['rate2'] = temp2
 
-    #st1['rate2']=np.log(st1['RATE']) - np.log(1-st1['RATE'])
+    # st1['rate2']=np.log(st1['RATE']) - np.log(1-st1['RATE'])
 
     st1.rate2 = temp1.reset_index().drop('index', axis=1)
     st2.rate2 = temp2.reset_index().drop('index', axis=1)
@@ -389,4 +390,12 @@ def big_macro_function(st1, st2, data_macro, repd_period):
     overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = main_func_adj(lr, data, selected_cols,
                                                                          monte_carlo_n_sample=1000)
 
-    return overall_pd_st1, overall_pd_st2, preds_st1, preds_st2
+    # arr1 = np.random.randint(1, 10, 16).reshape(-1, 1)
+    # arr2 = np.random.randint(1, 10, 16).reshape(-1, 1)
+    # np.concatenate((preds_st1, preds_st2), axis=1)
+    overall_pd = pd.DataFrame(np.array([overall_pd_st1, overall_pd_st2]))
+    overall_pd = overall_pd.T
+    overall_pd.index = ['total_pd']
+    final_macro_df = pd.concat((pd.DataFrame(np.concatenate((preds_st1, preds_st2), axis=1)), overall_pd), axis=0)
+
+    return final_macro_df

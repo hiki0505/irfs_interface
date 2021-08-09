@@ -195,26 +195,28 @@ def calculate(request):
         # print(pd_json_list_show['consumer'][0])
         # print(pd_json_list_show['consumer'][1])
         request.session['pd_data_dict'] = pd_json_list
-        print(request.session.get('pd_data_dict'))
-        print('-' * 30)
-        print(pd_json_list['consumer'][0])
-        print('-' * 30)
-        # dataframe1 = pd.DataFrame.from_dict(pd_json_list['consumer'][0], orient="records")
-        dataframe2 = pd.read_json(pd_json_list['consumer'][0], orient='index')
-        # print(dataframe1)
-        print(dataframe2)
-        smth = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
-        print('here is smth')
-        print(smth)
-        dataframe2['ACT_DATE'] = smth
-        print(dataframe2)
+        # print(request.session.get('pd_data_dict'))
+        # print('-' * 30)
+        # print(pd_json_list['consumer'][0])
+        # print('-' * 30)
+        # # dataframe1 = pd.DataFrame.from_dict(pd_json_list['consumer'][0], orient="records")
+        # dataframe2 = pd.read_json(pd_json_list['consumer'][0], orient='index')
+        # # print(dataframe1)
+        # print(dataframe2)
+        # smth = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
+        # print('here is smth')
+        # print(smth)
+        # dataframe2['ACT_DATE'] = smth
+        # print(dataframe2)
 
         # print(pd_df_list)
         # pd_df_1dlist = list(chain.from_iterable(pd_df_list))
         # pd_df_1dlist_html = [pd_df.to_html() for pd_df in pd_df_1dlist]
         # pd_jsons = [json.loads(df.reset_index().to_json(orient ='records')) for df in pd_df_1dlist]
         # df_html = pd_df_list[0][0].to_html()
+
         context = {'pd_json_list': pd_json_list_show}
+        # context = {'pd_df_list': pd_df_list}
         return render(request, 'irfs/pd.html', context=context)
         # return HttpResponse(df_html)
     else:
@@ -291,13 +293,22 @@ def upload(request):
         uploaded_file = request.FILES['document']
         pd_data_dict = request.session.get('pd_data_dict')
         print(pd_data_dict)
+        macro_df_list = {}
         for pd_list in Plist.objects.filter(measure='pd'):
             dataframe1 = macro_calc(pd_data_dict[pd_list.name][0])
             dataframe2 = macro_calc(pd_data_dict[pd_list.name][1])
-            overall_pd_st1, overall_pd_st2, preds_st1, preds_st2 = big_macro_function(dataframe1, dataframe2,
-                                                                                      uploaded_file,
-                                                                                      queryset.repd_period)
-            print(overall_pd_st1, overall_pd_st2, preds_st1, preds_st2)
+            final_macro_df = big_macro_function(dataframe1, dataframe2,
+                                                uploaded_file,
+                                                queryset.repd_period)
+            macro_df_list[pd_list.name] = final_macro_df
+            print(final_macro_df)
+
+        macro_json_list = {}
+        for i, j in macro_df_list.items():
+            macro_json_list[i] = [df.to_json(orient='index') for df in j]
+
+        request.session['macro_data_dict'] = macro_json_list
+        print(request.session.get('macro_data_dict'))
         # dataframe1 = pd.read_json(pd_data_dict['consumer'][0], orient='index')
         # dataframe2 = pd.read_json(pd_data_dict['consumer'][1], orient='index')
         # act_date1 = pd.to_datetime(dataframe1.ACT_DATE, unit='ms')
@@ -376,3 +387,21 @@ def staging(request):
         return render(request, 'irfs/staging.html')
 
     return render(request, 'irfs/staging.html')
+
+
+def ecl(request):
+    plists = Plist.objects.all()
+    print(request.POST)
+    names = ast.literal_eval(str(request.POST.getlist('client_name')))
+    plists_list = ast.literal_eval(str(request.POST.getlist('plist')))
+    plist_dict = dict(zip(names, plists_list))
+    print(plist_dict)
+    plist_dict_with_prod_codes = {}
+    for i, j in plist_dict.items():
+        plist_dict_with_prod_codes[i] = Plist.objects.filter(measure=j.split('_')[0], name=j.split('_')[1])[0].product_code
+
+    print(plist_dict_with_prod_codes)
+
+    # plist_codes = [code for code in Plist.objects.filter(measure=plists_list, name=name)]
+    # print(request.POST)
+    return render(request, 'irfs/ecl.html', context={'plists': plists})

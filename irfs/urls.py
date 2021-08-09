@@ -17,7 +17,8 @@ urlpatterns = [
     url('pd_plist_save', views.pd_plist_save, name='pd_plist_save'),
     url('lgd_plist_save', views.lgd_plist_save, name='lgd_plist_save'),
     url('lgd', views.lgd, name='lgd'),
-    url('staging', views.staging, name='staging')
+    url('staging', views.staging, name='staging'),
+    url('ecl', views.ecl, name='ecl')
 ]
 
 if settings.DEBUG:

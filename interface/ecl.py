@@ -11,6 +11,7 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     sole_pds = pd_soles
     corp_pds = pd_corps
 
+
     # LGDs
     lgs = lgds
 
@@ -186,7 +187,7 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     portfolio['VALYUTA'] = np.where(portfolio.CURRENCY == 0, 'AZN', 'CURR')
 
-    lgs['VALYUTA'] = np.where(lgs.CURRENCY_ID == 0, 'AZN', 'CURR')  # question
+    # lgs['VALYUTA'] = np.where(lgs.CURRENCY_ID == 0, 'AZN', 'CURR')  # question
 
     portfolio['MEHSUL_PD'] = np.select(
         condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards),
@@ -239,9 +240,9 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     )
 
     portfolio = portfolio.merge(pds, how='left', left_on='MEHSUL_PD', right_on='MEHSUL')  # question
-    portfolio = portfolio.merge(lgs[['BUCKET', 'PRODUCT', 'VALYUTA', 'CONSISTENT LOSS']],
+    portfolio = portfolio.merge(lgs[['BUCKET', 'PRODUCT', 'CONSISTENT LOSS']],
                                 how='left', left_on=['LGD_BUCKET', 'MEHSUL_LGD', 'VALYUTA'],
-                                right_on=['BUCKET', 'PRODUCT', 'VALYUTA'])
+                                right_on=['BUCKET', 'PRODUCT'])
 
     portfolio['LGD'] = np.where(portfolio['PRODUCT'].isna(), 0.54, portfolio['CONSISTENT LOSS'])
     portfolio['LGD'] = np.where(portfolio.TOTAL_COLL_24 > 0, 1, portfolio.LGD)

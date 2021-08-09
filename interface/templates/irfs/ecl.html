@@ -1,0 +1,69 @@
+{% extends 'irfs/base.html' %}
+{% block content%}
+
+    <div class="accordion-wrapper">
+        <div class="accordion">
+             <input type="checkbox" name="radio-a" id="check1">
+                <label class="accordion-label" for="check1">P-LIST FOR ECL</label>
+                    <div class="accordion-content">
+                        <form class="Form" name="form" role="form" method="post" action="">
+                            {% csrf_token %}
+                            <div class="Form-title">Choose plist for ECL:<br></div>
+                                <div class="plist_container">
+                                  <table class="_table" id="plist_table">
+                                    <thead>
+                                      <tr>
+                                        <th>Product name</th>
+                                        <th>PD</th>
+                                        <th>LGD</th>
+                                        <th width="50px" id="btn_brd">
+                                          <div class="action_container">
+                                            <button type="button" class="success" onclick="create_tr('table_body')">
+                                              <i class="fa fa-plus"></i>
+                                            </button>
+                                          </div>
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody id="table_body">
+                                      <tr>
+                                        <td>
+                                          <input type="text" class="form_control" name="client_name" placeholder="Consumer">
+                                        </td>
+                                        <td>
+                                          <select name="plist" class="plist">
+                                              <option value="">Choose an option</option>
+                                              {% for plist in plists %}
+                                                <option value="{{ plist.measure }}_{{ plist.name }}">{{ plist.measure }} - {{ plist.name }}</option>
+                                              {% endfor %}
+                                          </select>
+                                        </td>
+                                        <td>
+                                          <select name="plist" class="plist">
+                                              <option value="">Choose an option</option>
+                                              {% for plist in plists %}
+                                                <option value="{{ plist.measure }}_{{ plist.name }}">{{ plist.measure }} - {{ plist.name }}</option>
+                                              {% endfor %}
+                                          </select>
+                                        </td>
+                                        <td id="btn_brd">
+                                          <div class="action_container">
+                                            <button type="button" class="danger" onclick="remove_tr(this)">
+                                              <i class="fa fa-close"></i>
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                            <div class="Form-buttonContainer">
+                                <button class="Form-button">ADD P-LIST</button>
+                            </div>
+                        </form>
+                    </div>
+        </div>
+    </div>
+
+
+{% endblock %}
