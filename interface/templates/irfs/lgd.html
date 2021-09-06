@@ -31,13 +31,13 @@
                                       </tr>
                                     </thead>
                                     <tbody id="table_body">
-                                    {% for lgd_l in lgd_list %}
+                                    {% for lgd_pl_name, lgd_pl_code in lgd_list.items %}
                                       <tr>
                                         <td>
-                                          <input type="text" class="form_control" name="lgd_client_name" placeholder="Consumer" value="{{lgd_l.name}}">
+                                          <input type="text" class="form_control" name="lgd_client_name" placeholder="Consumer" value="{{lgd_pl_name}}">
                                         </td>
                                         <td>
-                                          <input type="text" class="form_control" name="lgd_client_code" placeholder="18001, 18002, ..." value="{{lgd_l.product_code}}">
+                                          <input type="text" class="form_control" name="lgd_client_code" placeholder="18001, 18002, ..." value="{{lgd_pl_code}}">
                                         </td>
                                         <td id="btn_brd">
                                           <div class="action_container">

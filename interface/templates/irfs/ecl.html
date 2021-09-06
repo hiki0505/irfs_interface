@@ -31,18 +31,18 @@
                                           <input type="text" class="form_control" name="client_name" placeholder="Consumer">
                                         </td>
                                         <td>
-                                          <select name="plist" class="plist">
+                                          <select name="pd_list" class="plist">
                                               <option value="">Choose an option</option>
-                                              {% for plist in plists %}
-                                                <option value="{{ plist.measure }}_{{ plist.name }}">{{ plist.measure }} - {{ plist.name }}</option>
+                                              {% for pd_name in pd_list.keys %}
+                                                <option value="{{ pd_name }}">pd_{{ pd_name }}</option>
                                               {% endfor %}
                                           </select>
                                         </td>
                                         <td>
-                                          <select name="plist" class="plist">
+                                          <select name="lgd_list" class="plist">
                                               <option value="">Choose an option</option>
-                                              {% for plist in plists %}
-                                                <option value="{{ plist.measure }}_{{ plist.name }}">{{ plist.measure }} - {{ plist.name }}</option>
+                                              {% for lgd_name in lgd_list.keys %}
+                                                <option value="{{ lgd_name }}">lgd_{{ lgd_name }}</option>
                                               {% endfor %}
                                           </select>
                                         </td>

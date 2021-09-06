@@ -1,4 +1,5 @@
 import datetime
+import sqlite3
 from itertools import chain
 import json
 import psycopg2
@@ -13,27 +14,19 @@ import ast
 from .script import IRFS
 from .services import db_connection
 import pprint
-from .models import DatabaseCredentials, Ifrs, Plist
+from .models import DatabaseCredentials, Ifrs, Plist, LGD, LGD_DF, PD_UPD, STAGING
 from .pd_script import pd_calculator
 from .lgd2 import lgd_calculator
 from .staging import staging_calculator
 from .big_macro_func import big_macro_function
+from .ecl import ecl_calculator
+from django.conf import settings
+from .mehsul_calc_script import mehsul_adding
+from .config import username, PLIST_GLOBS
 
 
 class DatabaseConnectionError(Exception):
     pass
-
-
-# PLIST_GLOBS = {
-#     'consumer': "(01801, 02201, 02203, 02800, 02801, 02803, 02805)",
-#     'corporate': "(01821, 01803, 01805, 01806, 01807, 01808, 01855, 01856, 01857, 01858, 02002, 02004, 02009, 02014, 02017, 02100, 02102, 02103, 02201, 02203, 02300, 02304, 02400, 02600) and must_novu not like 'F%Z%K%'",
-#     'sole': "(01821, 01803, 01805, 01806, 01807, 01808, 01855, 01856, 01857, 01858, 02002, 02004, 02009, 02014, 02017, 02100, 02102, 02103, 02300, 02304, 02400, 02600) and must_novu like 'F%Z%K%'"
-# }
-
-FEATURES = ['DATE_OPER', 'REST_NEW', 'DATE_OPEN', 'DATE_PLANCLOSE', 'DATEOFBIRTH', 'OVERDUEDAY',
-            'INTEREST_OVERDUEDAY', 'SUMMAAZN', 'SUMMA', 'SUMMA_19AZN', 'SUMMA_19', 'PROCAZN', 'PROC', 'PROCPROSAZN',
-            'PROCPROS', 'SUMMAKREAZN', 'SUMMAKRE', 'PROCSTAVKRE', 'KOD1', 'LICSCHKRE', 'subaccount', 'cid', 'pid',
-            'plist', 'wrof']
 
 
 def connect(request):
@@ -157,6 +150,7 @@ def calculate(request):
         queryset.repd_period = request.POST.get('repd_period')
         repd_start = repd_start.strftime("%d-%b-%y")
         repd_end = repd_end.strftime("%d-%b-%y")
+
         print('repd start -> ', repd_start)
         print('repd end -> ', repd_end)
         queryset.save()
@@ -164,14 +158,18 @@ def calculate(request):
             {key: value for key, value in Ifrs.objects.values()[0].items() if key != 'id'}
         ]
         print(values)
-        queryset2 = DatabaseCredentials.objects
-        db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
-        print(db_credentials)
+        queryset2 = DatabaseCredentials.objects.filter(username=username)[0]
+        # print(queryset2['username'])
+
+
+        # db_credentials = {key: value for key, value in queryset2.items() if key != 'id'}
+        # print(db_credentials)
         # for i, j in PLIST_GLOBS.items():
         #     pd_df_list[i] = pd_calculator(db_credentials, values[0], j, repd_start, repd_end)
-        for pd_plist in Plist.objects.filter(measure='pd'):
-            pd_df_list[pd_plist.name] = pd_calculator(db_credentials, values[0], pd_plist.product_code, repd_start,
-                                                      repd_end)
+        pd_pl_list = request.session.get('pd_plist')
+        for pd_pl_name, pd_pl_code in pd_pl_list.items():
+            pd_df_list[pd_pl_name] = pd_calculator(queryset2, values[0], pd_pl_code, repd_start,
+                                                   repd_end)
         # print('tut budet to wto nado')
         # print(pd_df_list['consumer'][0])
         # print(pd_df_list['consumer'][1])
@@ -218,9 +216,12 @@ def calculate(request):
         context = {'pd_json_list': pd_json_list_show}
         # context = {'pd_df_list': pd_df_list}
         return render(request, 'irfs/pd.html', context=context)
+
+
         # return HttpResponse(df_html)
     else:
-        pd_list = Plist.objects.filter(measure='pd')
+        # pd_list = Plist.objects.filter(measure='pd')
+        pd_list = PLIST_GLOBS
         return render(request, 'irfs/pd.html', context={'pd_list': pd_list})
 
 
@@ -233,17 +234,20 @@ def pd_plist_save(request):
 
         plists = dict(zip(names, codes))
         # print(plists)
-        haven_plists = Plist.objects.all()
-        for name, code in plists.items():
-            filtered = haven_plists.filter(measure='pd', name=name)
-            if filtered:
-                filtered.update(product_code=code)
-            else:
-                plists = Plist()
-                plists.name = name
-                plists.product_code = code
-                plists.measure = 'pd'
-                plists.save()
+        # haven_plists = Plist.objects.all()
+        # for name, code in plists.items():
+        #     filtered = haven_plists.filter(measure='pd', name=name)
+        #     if filtered:
+        #         filtered.update(product_code=code)
+        #     else:
+        #         plists = Plist()
+        #         plists.name = name
+        #         plists.product_code = code
+        #         plists.measure = 'pd'
+        #         plists.save()
+        request.session['pd_plist'] = plists
+        print(request.session.get('pd_plist'))
+
         context = {'pl_success': 'Plists saved successfully!'}
 
         return render(request, 'irfs/pd.html', context=context)
@@ -259,18 +263,20 @@ def lgd_plist_save(request):
         # print(type(codes), codes)
 
         plists = dict(zip(names, codes))
-        haven_plists = Plist.objects.all()
-        # print(plists)
-        for name, code in plists.items():
-            filtered = haven_plists.filter(measure='lgd', name=name)
-            if filtered:
-                filtered.update(product_code=code)
-            else:
-                plists = Plist()
-                plists.name = name
-                plists.product_code = code
-                plists.measure = 'lgd'
-                plists.save()
+        # haven_plists = Plist.objects.all()
+        # # print(plists)
+        # for name, code in plists.items():
+        #     filtered = haven_plists.filter(measure='lgd', name=name)
+        #     if filtered:
+        #         filtered.update(product_code=code)
+        #     else:
+        #         plists = Plist()
+        #         plists.name = name
+        #         plists.product_code = code
+        #         plists.measure = 'lgd'
+        #         plists.save()
+        request.session['lgd_plist'] = plists
+        print(request.session.get('lgd_plist'))
 
         context = {'pl_success': 'Plists saved successfully!'}
 
@@ -294,21 +300,29 @@ def upload(request):
         pd_data_dict = request.session.get('pd_data_dict')
         print(pd_data_dict)
         macro_df_list = {}
-        for pd_list in Plist.objects.filter(measure='pd'):
-            dataframe1 = macro_calc(pd_data_dict[pd_list.name][0])
-            dataframe2 = macro_calc(pd_data_dict[pd_list.name][1])
+        pd_pl_list = request.session.get('pd_plist')
+        for pd_pl_name in pd_pl_list.keys():
+            if pd_pl_name == 'corporate':  # TEMPORARY CONDITION FOR PORTFOLIO_21
+                continue
+            dataframe1 = macro_calc(pd_data_dict[pd_pl_name][0])
+            dataframe2 = macro_calc(pd_data_dict[pd_pl_name][1])
             final_macro_df = big_macro_function(dataframe1, dataframe2,
                                                 uploaded_file,
                                                 queryset.repd_period)
-            macro_df_list[pd_list.name] = final_macro_df
+            macro_df_list[pd_pl_name] = final_macro_df
             print(final_macro_df)
 
-        macro_json_list = {}
-        for i, j in macro_df_list.items():
-            macro_json_list[i] = [df.to_json(orient='index') for df in j]
+        datafile_pd = PD_UPD()
+        datafile_pd.macro_data = macro_df_list
+        datafile_pd.save()
 
-        request.session['macro_data_dict'] = macro_json_list
-        print(request.session.get('macro_data_dict'))
+        # macro_json_list = {}
+        # for i, j in macro_df_list.items():
+        #     macro_json_list[i] = [df.to_json(orient='index') for df in j]
+
+        # request.session['macro_data_dict'] = macro_json_list
+        # print(request.session.get('macro_data_dict'))
+
         # dataframe1 = pd.read_json(pd_data_dict['consumer'][0], orient='index')
         # dataframe2 = pd.read_json(pd_data_dict['consumer'][1], orient='index')
         # act_date1 = pd.to_datetime(dataframe1.ACT_DATE, unit='ms')
@@ -325,6 +339,8 @@ def upload(request):
         #            'preds_st2': preds_st2}
         return render(request, 'irfs/upload.html')
 
+    datapd = PD_UPD.objects.last()
+    print(datapd.macro_data)
     return render(request, 'irfs/upload.html')
     # queryset = Ifrs.objects
     # values = [
@@ -347,8 +363,8 @@ def lgd(request):
         print(rec_per)
         print(type(rec_per))
         lgd_df_list = {}
-        queryset2 = DatabaseCredentials.objects
-        db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
+        queryset2 = DatabaseCredentials.objects.filter(username=username)[0]
+        # db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
         values = [
             {key: value for key, value in Ifrs.objects.values()[0].items() if key != 'id'}
         ]
@@ -361,47 +377,135 @@ def lgd(request):
 
         # for i, j in PLIST_GLOBS.items():
         #     lgd_df_list[i] = lgd_calculator(db_credentials, values[0], j, repd_rec_date_ns)
-        for lgd_plist in Plist.objects.filter(measure='lgd'):
-            lgd_df_list[lgd_plist.name] = lgd_calculator(db_credentials, values[0], lgd_plist.product_code,
-                                                         repd_rec_date_ns)
+        # for pd_pl_name, pd_pl_code in pd_pl_list:
+        #     pd_df_list[pd_pl_name] = pd_calculator(db_credentials, values[0], pd_pl_code, repd_start,
+        #                                            repd_end)
+        lgd_pl_list = request.session.get('lgd_plist')
+        for lgd_pl_name, lgd_pl_code in lgd_pl_list.items():
+            lgd_df_list[lgd_pl_name] = lgd_calculator(queryset2, values[0], lgd_pl_code,
+                                                      repd_rec_date_ns)
+        datafile_lgd = LGD()
+        datafile_lgd.data_dict = lgd_df_list
+        datafile_lgd.save()
+
+        # lgd_json_list = {}
+        # for i, j in lgd_df_list.items():
+        #     lgd_json_list[i] = [df.to_json(orient='index') for df in j]
 
         print(lgd_df_list)
+
+        print('Here some tests')
+        list_of_lgds = []
+        for i, j in lgd_df_list.items():
+            j['PRODUCT'] = i
+            lgd_df_list[i] = j
+            list_of_lgds.append(j)
+
+        print('lgd df list after transformation')
+        print(lgd_df_list)
+        # newdf = j.insert(1, 'PRODUCT', i)
+        # print(newdf)
+        # list_of_lgds.append(newdf)
+
+        print(list_of_lgds)
+
+        final_lgd = pd.concat(list_of_lgds, axis=0)
+        print(final_lgd)
+        # user = settings.DATABASES['default']['USER']
+        # password = settings.DATABASES['default']['PASSWORD']
+        # database_name = settings.DATABASES['default']['NAME']
+        #
+        # sqlite3.connect(database_name)
+        # engine = create_engine(database_url, echo=False)
+
+        # entries = []
+        # for e in final_lgd.T.to_dict().values():
+        #     entries.append(LGD(**e))
+        # LGD.objects.bulk_create(entries)
+        datafile = LGD_DF()
+
+        datafile.data = final_lgd
+        datafile.save()
+
         return render(request, 'irfs/lgd.html')
 
-    lgd_list = Plist.objects.filter(measure='lgd')
+    dataf = LGD_DF.objects.last()
+    print(dataf.data)
+    # lgd_list = Plist.objects.filter(measure='lgd')
+    lgd_list = PLIST_GLOBS
     return render(request, 'irfs/lgd.html', context={'lgd_list': lgd_list})
 
 
 def staging(request):
     if request.method == 'POST':
-        queryset2 = DatabaseCredentials.objects
-        db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
+        queryset2 = DatabaseCredentials.objects.filter(username=username)[0]
+        # db_credentials = {key: value for key, value in queryset2.values()[0].items() if key != 'id'}
         values = [
             {key: value for key, value in Ifrs.objects.values()[0].items() if key != 'id'}
         ]
 
         queryset = Ifrs.objects.last()
         repd_end = queryset.repd_end.strftime("%d-%b-%y")
-        stage_data = staging_calculator(db_credentials, values[0], repd_end)
+        stage_data = staging_calculator(queryset2, values[0], repd_end)
         print(stage_data)
+        stage_data_json = stage_data.to_json(orient='index')
+        request.session['stage_data_json'] = stage_data_json
+
         return render(request, 'irfs/staging.html')
 
     return render(request, 'irfs/staging.html')
 
 
 def ecl(request):
-    plists = Plist.objects.all()
-    print(request.POST)
-    names = ast.literal_eval(str(request.POST.getlist('client_name')))
-    plists_list = ast.literal_eval(str(request.POST.getlist('plist')))
-    plist_dict = dict(zip(names, plists_list))
-    print(plist_dict)
-    plist_dict_with_prod_codes = {}
-    for i, j in plist_dict.items():
-        plist_dict_with_prod_codes[i] = Plist.objects.filter(measure=j.split('_')[0], name=j.split('_')[1])[0].product_code
+    if request.method == 'POST':
+        # db_credentials = {key: value for key, value in DatabaseCredentials.objects.values()[0].items() if key != 'id'}
+        portfolio = mehsul_adding(DatabaseCredentials.objects.filter(username=username)[0], PLIST_GLOBS)
 
-    print(plist_dict_with_prod_codes)
 
-    # plist_codes = [code for code in Plist.objects.filter(measure=plists_list, name=name)]
-    # print(request.POST)
-    return render(request, 'irfs/ecl.html', context={'plists': plists})
+        print(request.POST)
+        print(request.POST.getlist('pd_list'))
+        names = ast.literal_eval(str(request.POST.getlist('client_name')))
+        pd_s = ast.literal_eval(str(request.POST.getlist('pd_list')))
+        lgd_s = ast.literal_eval(str(request.POST.getlist('lgd_list')))
+        pd_names = dict(zip(names, pd_s))
+        lgd_names = dict(zip(names, lgd_s))
+        datapd = PD_UPD.objects.last().macro_data
+        lgds = LGD.objects.last().data_dict
+        print(pd_names)
+        print(datapd)
+        print(lgds)
+        obtained_pd_dict = {}
+        for pd_prod_name, pd_name in pd_names.items():
+            obtained_pd_dict[pd_prod_name] = datapd[pd_name]
+
+        obtained_lgd_dict = {}
+        for lgd_prod_name, lgd_name in lgd_names.items():
+            obtained_lgd_dict[lgd_prod_name] = lgds[lgd_name]
+
+        print('Here is obtainations ')
+        print(obtained_pd_dict)
+        print(obtained_lgd_dict)
+        staging = request.session.get('stage_data_json')
+        staging_df = pd.read_json(staging, orient='index')
+        ecl_calculator(obtained_pd_dict, obtained_lgd_dict, staging_df, pd_names, lgd_names, portfolio)
+        # plists = Plist.objects.all()
+        # print(request.POST)
+        # names = ast.literal_eval(str(request.POST.getlist('client_name')))
+        # plists_list = ast.literal_eval(str(request.POST.getlist('plist')))
+        # plist_dict = dict(zip(names, plists_list))
+        # print(plist_dict)
+        # plist_dict_with_prod_codes = {}
+        # for i, j in plist_dict.items():
+        #     plist_dict_with_prod_codes[i] = Plist.objects.filter(measure=j.split('_')[0], name=j.split('_')[1])[0].product_code
+        #
+        # print(plist_dict_with_prod_codes)
+        #
+        # # plist_codes = [code for code in Plist.objects.filter(measure=plists_list, name=name)]
+        # # print(request.POST)
+        return render(request, 'irfs/ecl.html')
+
+    pd_list = PD_UPD.objects.last().macro_data
+
+    lgd_list = LGD.objects.last().data_dict
+
+    return render(request, 'irfs/ecl.html', context={'pd_list': pd_list, 'lgd_list': lgd_list})

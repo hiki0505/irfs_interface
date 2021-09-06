@@ -7,18 +7,21 @@ from dateutil.relativedelta import relativedelta as rlt
 import sys
 import dill
 import pickle
-
+from .config import database_table_name
 
 def staging_calculator(db_credentials, ifrs_creds, repd_end):
+    # conn = co.connect(
+    #     u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'],
+    #                           db_credentials['dbname']))
     conn = co.connect(
-        u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'],
-                              db_credentials['dbname']))
+        u'{}/{}@{}/{}'.format(db_credentials.username, db_credentials.password, db_credentials.host,
+                              db_credentials.dbname))
 
     cursor = conn.cursor()
     cursor.execute(""" ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS' """)
 
-    dbt = "portfolio_21"  # table name in the database
-
+    # dbt = "portfolio_21"  # table name in the database
+    dbt = database_table_name
     repd = ifrs_creds['repd']  # report date for the portfolio
     resd = ifrs_creds['resd']  # date of restructuring
     st_date = ifrs_creds['st_date']  # loan origination date

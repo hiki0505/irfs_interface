@@ -3,17 +3,23 @@ import pandas as pd
 import openpyxl
 
 
-def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
-    cons_pds = pd_cons
+def ecl_calculator(obtained_pd, obtained_lgd, stagings, pd_names, lgd_names, portfolio):
+    # cons_pds = obtained_pd['consumer']
     # pension_pds = pd.read_pickle('pension_pds.pkl')
     # lomb_pds = pd.read_pickle('lomb_pds.pkl')
     # micro_pds = pd.read_pickle('mikro_pds.pkl') # QUESTION
-    sole_pds = pd_soles
-    corp_pds = pd_corps
+    # sole_pds = obtained_pd['sole']
+    # corp_pds = obtained_pd['corporate']
 
+    list_of_lgds = []
+    for i, j in obtained_lgd.items():
+        j['PRODUCT'] = i
+        # lgd_df_list[i] = j
+        list_of_lgds.append(j)
 
+    lgs = pd.concat(list_of_lgds, axis=0)
     # LGDs
-    lgs = lgds
+    # lgs = lgds
 
     # stages
     stages = stagings
@@ -23,7 +29,7 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     # payments = pd.read_pickle('payments.pkl')
 
     # portfolio
-    portfolio = pd.read_pickle('port2020.pkl')  # QUESTION
+    # portfolio = pd.read_sql()  # QUESTION
 
     # product codes
 
@@ -45,7 +51,7 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     portfolio['EAD'] = portfolio.ESAS_RESID_AZN + portfolio.VK_ESAS_QALIQ_AZN + portfolio.FAIZ_QALIQ_AZN + portfolio.VK_FAIZ_QALIQ_AZN
     portfolio['EAD_PRIN'] = portfolio.ESAS_RESID_AZN + portfolio.VK_ESAS_QALIQ_AZN
     portfolio['EAD_INT'] = portfolio.FAIZ_QALIQ_AZN + portfolio.VK_FAIZ_QALIQ_AZN
-    portfolio['EAD_LINE'] = np.where(portfolio.FEA_KODU.isin(prod_cards),  # QUESTION
+    portfolio['EAD_LINE'] = np.where(portfolio.MEHSUL == 'cards',  # QUESTION
                                      0.5 * (portfolio.ESAS_INIT_AZN - portfolio.EAD), 0)
     portfolio['EAD_TOTAL_WITH_LINES'] = portfolio.EAD + portfolio.EAD_LINE
 
@@ -61,10 +67,11 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     # collateral and EAD
 
-    real_est = [2, 10, 11, 12, 13, 14]
-    depo = [8]
-    sec = [9]
-    pmetals = [4]
+    real_est = ["DAŞINMAZ ƏMLAK"]
+    depo = ["DEPOZIT"]
+    others = ["ZAMANAT", "DAŞINAR ƏMLAK", "BLANK"]
+    # sec = [9]
+    # pmetals = [4]
 
     # REAL ESTATE
     portfolio['COLL_REAL'] = np.where(portfolio.GIROV_NOVU.isin(real_est), portfolio.GIROV_MEBLEG_AZN, 0)
@@ -189,30 +196,38 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     # lgs['VALYUTA'] = np.where(lgs.CURRENCY_ID == 0, 'AZN', 'CURR')  # question
 
-    portfolio['MEHSUL_PD'] = np.select(
-        condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards),
-                  portfolio.FEA_KODU.isin(prod_pensioner),
-                  portfolio.FEA_KODU.isin(prod_lomb),
-                  portfolio.FEA_KODU.isin(prod_micro),
-                  portfolio.FEA_KODU.isin(prod_sole),
-                  portfolio.FEA_KODU.isin(prod_corp)],
-        choicelist=['consumer', 'pensioner', 'lombard', 'micro', 'sole', 'corp']
-    )  # question
+    # portfolio['MEHSUL_PD'] = np.select(
+    #     condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards),
+    #               portfolio.FEA_KODU.isin(prod_pensioner),
+    #               portfolio.FEA_KODU.isin(prod_lomb),
+    #               portfolio.FEA_KODU.isin(prod_micro),
+    #               portfolio.FEA_KODU.isin(prod_sole),
+    #               portfolio.FEA_KODU.isin(prod_corp)],
+    #     choicelist=['consumer', 'pensioner', 'lombard', 'micro', 'sole', 'corp']
+    # )  # question
+    #
+    # portfolio['MEHSUL_LGD'] = np.select(
+    #     condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards + prod_pensioner),
+    #               portfolio.FEA_KODU.isin(prod_lomb + prod_micro),
+    #               portfolio.FEA_KODU.isin(prod_sole),
+    #               portfolio.FEA_KODU.isin(prod_corp)],
+    #     choicelist=['consumer', 'micro', 'sole', 'corp']
+    # )  # question
 
-    portfolio['MEHSUL_LGD'] = np.select(
-        condlist=[portfolio.FEA_KODU.isin(prod_mort + prod_cons + prod_cards + prod_pensioner),
-                  portfolio.FEA_KODU.isin(prod_lomb + prod_micro),
-                  portfolio.FEA_KODU.isin(prod_sole),
-                  portfolio.FEA_KODU.isin(prod_corp)],
-        choicelist=['consumer', 'micro', 'sole', 'corp']
-    )  # question
+    # for i in range(len(portfolio)):
+    #     portfolio['MEHSUL_PD'] = pd_names[portfolio[i, 'MEHSUL']]
+    #     portfolio['MEHSUL_LGD'] = lgd_names[portfolio[i, 'MEHSUL']]
 
-    print(cons_pds)
+    portfolio['MEHSUL_PD'] = portfolio['MEHSUL'].apply(lambda x: pd_names[x])
+    portfolio['MEHSUL_LGD'] = portfolio['MEHSUL'].apply(lambda x: lgd_names[x])
+    # print(cons_pds)
 
     pds = pd.DataFrame(columns=['MEHSUL', 'PD_STAGE1', 'PD_STAGE2'])
 
-    pd_list = [cons_pds, pension_pds, lomb_pds, micro_pds, sole_pds, corp_pds]
-    pd_names = ['consumer', 'pensioner', 'lombard', 'micro', 'sole', 'corp']
+    # pd_list = [cons_pds, pension_pds, lomb_pds, micro_pds, sole_pds, corp_pds]
+    pd_list, pd_names = map(list, [obtained_pd.keys(), obtained_pd.values()])
+    # pd_names = ['consumer', 'pensioner', 'lombard', 'micro', 'sole', 'corp']
+
 
     for i in range(6):
         pds.loc[i, 'MEHSUL'] = pd_names[i]
@@ -240,11 +255,11 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
     )
 
     portfolio = portfolio.merge(pds, how='left', left_on='MEHSUL_PD', right_on='MEHSUL')  # question
-    portfolio = portfolio.merge(lgs[['BUCKET', 'PRODUCT', 'CONSISTENT LOSS']],
+    portfolio = portfolio.merge(lgs[['BUCKET', 'PRODUCT', 'CL']],
                                 how='left', left_on=['LGD_BUCKET', 'MEHSUL_LGD', 'VALYUTA'],
                                 right_on=['BUCKET', 'PRODUCT'])
 
-    portfolio['LGD'] = np.where(portfolio['PRODUCT'].isna(), 0.54, portfolio['CONSISTENT LOSS'])
+    portfolio['LGD'] = np.where(portfolio['PRODUCT'].isna(), 0.54, portfolio['CL'])
     portfolio['LGD'] = np.where(portfolio.TOTAL_COLL_24 > 0, 1, portfolio.LGD)
 
     portfolio['PD_GEN'] = np.select(
@@ -303,26 +318,24 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
     # print(portfolio.FILIALNAME.unique())
 
-    subsetport = portfolio[['DATE_OPER', 'FILIALNUMBER',
-                            'LICSCHKRE', 'SUBSCHKRE', 'KOD', 'NAME_LICSCH', 'SUMMAKRE',
-                            'SUMMAKREAZN', 'DATE_OPEN', 'DATE_CLOSE', 'DATE_PLANCLOSE', 'FIN_DATE_CLOSE', 'SROK',
-                            'LGOTPERIOD',
-                            'PROCSTAVKRE', 'ADJ_INT_RATE', 'ADJ_INT_RATE_24',
-                            'VALYUTA', 'TIPKREDITA', 'NAME_TIPKREDITA', 'PRODUCT', 'MEHSUL', 'MEHSUL_PD',
+    subsetport = portfolio[['ACT_DATE',
+                            'KREDIT_HESABI',
+                            'ESAS_INIT_AZN', 'DATE_START', 'DATE_END_CONTRACT', 'FIN_DATE_CLOSE',
+                            'FAIZ', 'ADJ_INT_RATE', 'ADJ_INT_RATE_24',
+                            'VALYUTA', 'FEA_KODU', 'PRODUCT', 'MEHSUL', 'MEHSUL_PD',
                             'MEHSUL_LGD',
 
                             'SEP',
 
-                            'SUMMA', 'SUMMAAZN', 'SUMMA_19', 'SUMMA_19AZN', 'PROC', 'PROCAZN', 'PROCPROS',
-                            'PROCPROSAZN', 'OVERDUEDAY',
-                            'DATE_RESTRUCTURE', 'REST_NEW', 'KOLIC_RESTRUCTURE', 'DATE_PROLONG', 'KOLIC_PROLONG',
+                            'ESAS_RESID_AZN', 'VK_ESAS_QALIQ_AZN', 'FAIZ_QALIQ_AZN',
+                            'VK_FAIZ_QALIQ_AZN', 'ESAS_OVER_DAYS',
+                            'DATE_REST', 'REST_NEW',
 
                             'SEP',
 
-                            'TIPZALOGA', 'NAME_TIPZALOGA', 'SUMMA_ZALOGA',
-                            'SUMMA_ZALOGAAZN', 'KOLIC_PEREOCEN_ZALOGA',
-                            'SUMMA_PEREOCEN_ZALOGA', 'SUMMA_PEREOCEN_ZALOGAAZN',
-                            'DATA_PEREOCEN_ZALOGA',
+                            'GIROV_NOVU',
+                            'GIROV_MEBLEG_AZN',
+
 
                             'SEP',
 
@@ -345,23 +358,23 @@ def ecl_calculator(pd_cons, pd_soles, pd_corps, lgds, stagings):
 
                             'SEP',
 
-                            'EAD_TOT_ADJ_15', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET', 'CONSISTENT LOSS', 'LGD',
+                            'EAD_TOT_ADJ_15', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET', 'CL', 'LGD',
                             'ECL_15_NOMIN',
 
                             'SEP',
 
-                            'EAD_TOT_ADJ_24', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET', 'CONSISTENT LOSS', 'LGD',
+                            'EAD_TOT_ADJ_24', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET', 'CL', 'LGD',
                             'ECL_24_NOMIN',
 
                             'SEP',
 
                             'EAD_TOT_ADJ_MIN_BASED_15', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET',
-                            'CONSISTENT LOSS', 'LGD', 'ECL_15_MIN',
+                            'CL', 'LGD', 'ECL_15_MIN',
 
                             'SEP',
 
                             'EAD_TOT_ADJ_MIN_BASED_24', 'MATURITY', 'PD_GEN_MATURITY_ADJ', 'LGD_BUCKET',
-                            'CONSISTENT LOSS', 'LGD', 'ECL_24_MIN'
+                            'CL', 'LGD', 'ECL_24_MIN'
 
                             ]]
 

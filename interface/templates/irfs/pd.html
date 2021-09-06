@@ -32,13 +32,13 @@
                                       </tr>
                                     </thead>
                                     <tbody id="table_body">
-                                    {% for pd_l in pd_list %}
+                                    {% for pd_pl_name, pd_pl_code in pd_list.items %}
                                       <tr>
                                         <td>
-                                          <input type="text" class="form_control" name="pd_client_name" placeholder="Consumer" value="{{pd_l.name}}">
+                                          <input type="text" class="form_control" name="pd_client_name" placeholder="Consumer" value="{{pd_pl_name}}">
                                         </td>
                                         <td>
-                                          <input type="text" class="form_control" name="pd_client_code" placeholder="18001, 18002, ..." value="{{pd_l.product_code}}">
+                                          <input type="text" class="form_control" name="pd_client_code" placeholder="18001, 18002, ..." value="{{pd_pl_code}}">
                                         </td>
                                         <td id="btn_brd">
                                           <div class="action_container">

@@ -7,18 +7,22 @@ from dateutil.relativedelta import relativedelta as rlt
 import sys
 import dill
 import pickle
-
+from .config import database_table_name
 
 def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
+    # conn = co.connect(
+    #     u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'],
+    #                           db_credentials['dbname']))
     conn = co.connect(
-        u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'],
-                              db_credentials['dbname']))
+        u'{}/{}@{}/{}'.format(db_credentials.username, db_credentials.password, db_credentials.host,
+                              db_credentials.dbname))
+
 
     cursor = conn.cursor()
     cursor.execute(""" ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS' """)
 
-    dbt = "portfolio_21"  # table name in the database
-
+    # dbt = "portfolio_21"  # table name in the database
+    dbt = database_table_name
     repd = ifrs_creds['repd']  # report date for the portfolio
     resd = ifrs_creds['resd']  # date of restructuring
     st_date = ifrs_creds['st_date']  # loan origination date
@@ -51,7 +55,7 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
     ctype = ifrs_creds['ctype']  # customer type, individual or legal
     ptype = ifrs_creds['ptype']  # payment type, annuity for these purposes  # payment type, annuity for these purposes
 
-    ddate = pd.read_sql('select distinct act_date from portfolio_21 order by act_date', con=conn)
+    ddate = pd.read_sql('select distinct act_date from {} order by act_date'.format(database_table_name), con=conn)
     ddm = ddate[:]
     ddm.index = pd.to_datetime(ddm.ACT_DATE)
     ddm = ddm.resample('M').last()
@@ -195,10 +199,5 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
     sql = "select * from shabzul2 order by id, act_date, par_status"
     data = pd.read_sql(sql, con=conn)
 
-
     return data
 
-
-'''
-
-'''

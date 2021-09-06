@@ -2,6 +2,8 @@ from datetime import date
 
 from django.core.validators import int_list_validator, validate_comma_separated_integer_list
 from django.db import models
+from picklefield.fields import PickledObjectField
+
 
 # class PList(models.Model):
 #     prod_id = models.CommaSeparatedIntegerField
@@ -59,7 +61,6 @@ class Ifrs(models.Model):
     id_c = models.CharField(max_length=255)
     id_sub = models.CharField(max_length=255)
 
-
     # bid = "debt_standard_gl_acct_no" # balance account No
     cid = models.CharField(max_length=255)
     pid = models.CharField(max_length=255)
@@ -90,3 +91,28 @@ class Plist(models.Model):
     # )
     #  plist =
     # wrof =
+
+
+class LGD(models.Model):
+    data_dict = PickledObjectField()
+    # ID = models.AutoField(primary_key=True)
+    # ACT_DATE = models.DateField()
+    # PAR_STATUS = models.CharField(max_length=255)
+    # ORIGINAL = models.BigIntegerField()
+    # C0 = models.DecimalField(max_digits=10, decimal_places=2)
+    # LOSS = models.DecimalField(max_digits=10, decimal_places=2)
+    # PAID = models.DecimalField(max_digits=10, decimal_places=2)
+    # CL = models.DecimalField(max_digits=10, decimal_places=2)
+    # PRODUCT = models.CharField(max_length=255)
+
+
+class LGD_DF(models.Model):
+    data = PickledObjectField()
+
+
+class PD_UPD(models.Model):
+    macro_data = PickledObjectField()
+
+
+class STAGING(models.Model):
+    staging_data = PickledObjectField()

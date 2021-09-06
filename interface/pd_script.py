@@ -12,29 +12,34 @@ import cx_Oracle as co
 # import sklearn.preprocessing as skp
 # from datetime import datetime as dt
 from datetime import timedelta as dlt
+from .config import database_table_name
+
 # from dateutil.relativedelta import relativedelta as rlt
 # import sys
 # import dill
 # import pickle
 
 def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
-    conn = co.connect(u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'], db_credentials['dbname']))
+    conn = co.connect(
+        u'{}/{}@{}/{}'.format(db_credentials.username, db_credentials.password, db_credentials.host,
+                              db_credentials.dbname))
     # 'ruqiyye_bedirova/ruqiyye03@192.168.0.17:1521/bank'
     print(conn)
+    print(db_credentials)
     cursor = conn.cursor()
     cursor.execute(""" ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS' """)
 
-    ddate = pd.read_sql('select distinct act_date from portfolio_21 order by act_date', con=conn)
+    ddate = pd.read_sql('select distinct act_date from {} order by act_date'.format(database_table_name), con=conn)
     print(ddate)
-    print('*'*30)
+    print('*' * 30)
     ddm = ddate[:]
     ddm.index = pd.to_datetime(ddm.ACT_DATE)
     ddm = ddm.resample('M').last()
     print(ddm.tail())
     # globs
 
-    dbt = "portfolio_21"  # table name in the database
-
+    # dbt = "portfolio_17"  # table name in the database
+    dbt = database_table_name
     repd = ifrs_creds['repd']  # report date for the portfolio
     resd = ifrs_creds['resd']  # date of restructuring
     st_date = ifrs_creds['st_date']  # loan origination date
@@ -185,7 +190,7 @@ def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
 
     data1 = pd.read_sql(sql1, con=conn)
     # data1.to_pickle('cons_tr_data1.pkl')
-    print('*'*30)
+    print('*' * 30)
     print(data1)
     data2 = pd.read_sql(sql2, con=conn)
     print('*' * 30)

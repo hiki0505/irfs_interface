@@ -85,26 +85,26 @@ def big_macro_function(st1, st2, data_macro, repd_period):
     st1.dropna(inplace=True)
     st2.dropna(inplace=True)
 
-    temp1 = macro[(macro.year > 2013) & (macro.year < 2019)]['gdp'] / 45 + \
-            macro[(macro.year > 2013) & (macro.year < 2019)]['budrev'] / 45 + \
-            macro[(macro.year > 2013) & (macro.year < 2019)]['nreer']
-    temp2 = macro[(macro.year > 2013) & (macro.year < 2019)]['nreer'] / 45 + \
-            macro[(macro.year > 2013) & (macro.year < 2019)]['cap_invest'] / 45 + \
-            macro[(macro.year > 2013) & (macro.year < 2019)]['nominc']
-
-    temp1 = temp1 + np.random.normal(0, 10, 60)
-    temp2 = temp2 + np.random.normal(0, 10, 60)
-
-    temp1 = (temp1 - temp1.min()) / (temp1.max() - temp1.min())
-    temp2 = (temp2 - temp2.min()) / (temp2.max() - temp2.min())
+    # temp1 = macro[(macro.year > 2013) & (macro.year < 2019)]['gdp'] / 45 + \
+    #         macro[(macro.year > 2013) & (macro.year < 2019)]['budrev'] / 45 + \
+    #         macro[(macro.year > 2013) & (macro.year < 2019)]['nreer']
+    # temp2 = macro[(macro.year > 2013) & (macro.year < 2019)]['nreer'] / 45 + \
+    #         macro[(macro.year > 2013) & (macro.year < 2019)]['cap_invest'] / 45 + \
+    #         macro[(macro.year > 2013) & (macro.year < 2019)]['nominc']
+    #
+    # temp1 = temp1 + np.random.normal(0, 10, 60)
+    # temp2 = temp2 + np.random.normal(0, 10, 60)
+    #
+    # temp1 = (temp1 - temp1.min()) / (temp1.max() - temp1.min())
+    # temp2 = (temp2 - temp2.min()) / (temp2.max() - temp2.min())
 
     # st1['rate2'] = temp1
     # st2['rate2'] = temp2
 
     # st1['rate2']=np.log(st1['RATE']) - np.log(1-st1['RATE'])
 
-    st1.rate2 = temp1.reset_index().drop('index', axis=1)
-    st2.rate2 = temp2.reset_index().drop('index', axis=1)
+    # st1.rate2 = temp1.reset_index().drop('index', axis=1)
+    # st2.rate2 = temp2.reset_index().drop('index', axis=1)
 
     def get_bic_for_dummies(data, mlist, mdf, last_mn, curr_mn, bicc, mnlist, cycle, x1):
         # print('!------------------------------step bashladi')
@@ -338,7 +338,7 @@ def big_macro_function(st1, st2, data_macro, repd_period):
         # finding probabilities
         return counts / N
 
-    def main_func_adj(reg_obj, data, selected_cols, start_date='2010-01-01', end_date='2020-01-01',
+    def main_func_adj(reg_obj, data, selected_cols, start_date='2010-01-01', end_date='2021-06-30',
                       method='covariance', seasonal_adjustment=True, lag=1, cycle='monthly',
                       monte_carlo_n_sample=100000):
         n_columns = len(selected_cols)
@@ -368,7 +368,10 @@ def big_macro_function(st1, st2, data_macro, repd_period):
 
         averages = np.concatenate((np.mean(quantiles.iloc[:250, :]), np.mean(quantiles.iloc[250:500, :]),
                                    np.mean(quantiles.iloc[500:750, :]), np.mean(quantiles.iloc[750:, :]))).reshape(-1,
-                                                                                                                   2)
+                                                                                                                   quantiles.shape[1])
+        print(averages)
+        print('*'*30)
+        print(quantiles.columns)
         q_test = pd.DataFrame(averages, columns=quantiles.columns)
         q_test['key'] = 1
         all_scenarios = pd.merge(q_test.iloc[:, 0], q_test.iloc[:, 1], on=q_test['key']).drop('key_0', axis=1)
