@@ -8,6 +8,8 @@ import sys
 import dill
 import pickle
 from .config import database_table_name
+from .services import get_ifrs_data
+
 
 def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
     # conn = co.connect(
@@ -23,37 +25,7 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
 
     # dbt = "portfolio_21"  # table name in the database
     dbt = database_table_name
-    repd = ifrs_creds['repd']  # report date for the portfolio
-    resd = ifrs_creds['resd']  # date of restructuring
-    st_date = ifrs_creds['st_date']  # loan origination date
-    end_date = ifrs_creds['end_date']  # contractual loan maturity date
-    bthday = ifrs_creds['bthday']
-
-    dp = ifrs_creds['dp']  # days principal is past due
-    di = ifrs_creds['di']  # days interest is past due
-
-    anp_m = ifrs_creds['anp_m']  # normal principal amount in manats
-    anp_c = ifrs_creds['anp_c']  # normal principal amount in currency
-    aop_m = ifrs_creds['aop_m']  # overdue principal amount in manats
-    aop_c = ifrs_creds['aop_c']  # overdue principal amount in currency
-
-    ani_m = ifrs_creds['ani_m']  # normal interest amount in manats
-    ani_c = ifrs_creds['ani_c']  # normal interest amount in currency
-    aoi_m = ifrs_creds['aoi_m']  # overdue interest amount in manats
-    aoi_c = ifrs_creds['aoi_c']  # overdue interest amount in currency
-
-    aor_m = ifrs_creds['aor_m']  # original amount in manats
-    aor_c = ifrs_creds['aor_c']  # original amount in currency
-
-    id_l = ifrs_creds['id_l']  # contract (loan) ID which is client id here
-    id_c = ifrs_creds['id_c']  # client ID
-    id_sub = ifrs_creds['id_sub']  # subaccount (order of loan)
-
-    # bid = "debt_standard_gl_acct_no" # balance account No
-    cid = ifrs_creds['cid']  # currency ID (or name)
-    pid = ifrs_creds['pid']  # product ID or name
-    ctype = ifrs_creds['ctype']  # customer type, individual or legal
-    ptype = ifrs_creds['ptype']  # payment type, annuity for these purposes  # payment type, annuity for these purposes
+    ifrs_creds = get_ifrs_data()
 
     ddate = pd.read_sql('select distinct act_date from {} order by act_date'.format(database_table_name), con=conn)
     ddm = ddate[:]
@@ -106,7 +78,7 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
     # p2 = ""
 
     for i in ddm.ACT_DATE[(ddm.ACT_DATE <= act_date)]:
-        p2 = """insert into shabzul2 (
+        p2_start = """insert into shabzul2 (
          act_date,
          par_status,
          original,
@@ -123,6 +95,8 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
         from
         (select act_date, kredit_hesabi as acc, subhesab as acc2,
         case 
+        """
+        p2_middle = '''
         when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) = 0 then '00_0'
         when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 1 and 90 then '01_1_90'
         when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 91 and 120 then '02_91_120'
@@ -135,19 +109,40 @@ def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
         when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 301 and 330 then '09_301_330'
         when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) between 331 and 360 then '10_331_360'
         when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) > 360 then '11_360_'
+        '''
+        stage_3_start = 90
+        p2_middle_generate = """
+        when greatest({di}, {dp}) = 0 then '00_0'
+        when greatest({di}, {dp}) between 1 and {stage_3_start} then '01_1_{stage_3_start}'
+        """.format(stage_3_start=stage_3_start, di=ifrs_creds['di'], dp=ifrs_creds['dp'])
+
+        for i in ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11']:
+            if i == '11':
+                p2_middle_generate += "when greatest({di}, {dp}) > {stage_3_start} then '{i}_{stage_3_start}_'".format(
+                                        stage_3_start=stage_3_start, i=i, di=ifrs_creds['di'], dp=ifrs_creds['dp'])
+                break
+            btw1_date = stage_3_start+1
+            btw2_date = stage_3_start+30
+
+            p2_middle_generate += "when greatest({di}, {dp}) between {btw1_date} and {btw2_date} then '{i}_{btw1_date}_{btw2_date}'".format(btw1_date=btw1_date, btw2_date=btw2_date, i=i, di=ifrs_creds['di'], dp=ifrs_creds['dp'])
+            stage_3_start += 30
+
+        p2_end = """
         end as par_status,
         esas_resid_azn + vk_esas_qaliq_azn as amt
         from {dbt} where act_date='{i}' and odeme_qaydasi='A' and {pid} in {plist}) t1 
         left join
         (select kredit_hesabi as acc, subhesab as acc2, 
         case 
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) = 0 then '0'
-        when greatest(FAIZ_OVER_DAYS, ESAS_OVER_DAYS) > 1 then '1_'
+        when greatest({di}, {dp}) = 0 then '0'
+        when greatest({di}, {dp}) > 1 then '1_'
         end as par_status,
         esas_resid_azn + vk_esas_qaliq_azn as amt
         from {dbt} where act_date = add_months(to_date('{i}', 'YYYY/MM/DD HH24:MI:SS'),12)) t2
         on t1.acc = t2.acc and t1.acc2=t2.acc2
-        group by t1.act_date, t1.par_status""".format(dbt=dbt, i=i, pid=pid, plist=plist)
+        group by t1.act_date, t1.par_status""".format(dbt=dbt, i=i, pid=ifrs_creds['pid'], plist=plist, di=ifrs_creds['di'], dp=ifrs_creds['dp'])
+
+        p2 = p2_start + p2_middle_generate + p2_end
         cursor.execute(p2)
         conn.commit()
 
