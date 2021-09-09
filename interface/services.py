@@ -4,6 +4,8 @@ import pyodbc
 import pymysql
 import cx_Oracle as co
 from .models import Ifrs
+
+
 def db_connection(engine, username, password, host, db_name):
     conn = None
     if engine == 'postgres':
@@ -17,6 +19,7 @@ def db_connection(engine, username, password, host, db_name):
         conn = co.connect(conn_str)
 
     return conn
+
 
 def get_ifrs_data():
     ifrs_dict = {}

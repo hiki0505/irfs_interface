@@ -1,28 +1,17 @@
-import datetime
-import sqlite3
-from itertools import chain
 import json
-import psycopg2
-import pyodbc
-import pymysql
-import cx_Oracle as co
 from dateutil.relativedelta import relativedelta
-from django.http import HttpResponse
 from django.shortcuts import render
 import pandas as pd
 import ast
-from .script import IRFS
-from .services import db_connection
-import pprint
 from .models import DatabaseCredentials, Ifrs, Plist, LGD, LGD_DF, PD_UPD, STAGING
 from .pd_script import pd_calculator
 from .lgd2 import lgd_calculator
 from .staging import staging_calculator
 from .big_macro_func import big_macro_function
 from .ecl import ecl_calculator
-from django.conf import settings
 from .mehsul_calc_script import mehsul_adding
 from .config import username, PLIST_GLOBS
+from .Metrics_Interface import PD
 
 
 class DatabaseConnectionError(Exception):
@@ -119,13 +108,7 @@ def predictMPG(request):
         macros.wrof = request.POST.get('wrof', '')
         macros.save()
         context = {'success2': 'Saved successfully'}
-        # temp = dict(zip(FEATURES, values))
-        # print(temp)
-        # result = IRFS.fake_score(temp, FEATURES)
-        # testDtaa = pd.DataFrame({'x': temp}).transpose()
-        # scoreval = reloadModel.predict(testDtaa)[0]
-        # context = {'scoreval': scoreval, 'temp': temp}
-        # context = {'result': result}
+
         return render(request, 'irfs/general.html', context=context)
     else:
         return render(request, 'irfs/general.html')
@@ -134,93 +117,20 @@ def predictMPG(request):
 def calculate(request):
     if request.method == 'POST':
         pd_df_list = {}
-        # pd_df_list = []
         queryset = Ifrs.objects.last()
-        print(request.POST.get('repd_period', 'Salam necesen?'))
-        if request.POST.get('repd_period') == 'yearly':
-            # queryset.update(repd_start = queryset.repd_start + relativedelta(years=+1))
-            # queryset.update(repd_end=queryset.repd_end + relativedelta(years=-1))
-            repd_start = queryset.repd_start + relativedelta(years=+1)
-            repd_end = queryset.repd_end + relativedelta(years=-1)
-        elif request.POST.get('repd_period') == 'monthly':
-            # queryset.update(repd_start=queryset.repd_start + relativedelta(months=+1))
-            # queryset.update(repd_end=queryset.repd_end + relativedelta(months=-1))
-            repd_start = queryset.repd_start + relativedelta(months=+1)
-            repd_end = queryset.repd_end + relativedelta(months=-1)
-        queryset.repd_period = request.POST.get('repd_period')
-        repd_start = repd_start.strftime("%d-%b-%y")
-        repd_end = repd_end.strftime("%d-%b-%y")
-
-        print('repd start -> ', repd_start)
-        print('repd end -> ', repd_end)
-        queryset.save()
-        values = [
-            {key: value for key, value in Ifrs.objects.values()[0].items() if key != 'id'}
-        ]
-        print(values)
-        queryset2 = DatabaseCredentials.objects.filter(username=username)[0]
-        # print(queryset2['username'])
-
-
-        # db_credentials = {key: value for key, value in queryset2.items() if key != 'id'}
-        # print(db_credentials)
-        # for i, j in PLIST_GLOBS.items():
-        #     pd_df_list[i] = pd_calculator(db_credentials, values[0], j, repd_start, repd_end)
+        repd_start, repd_end = PD.repd_period(queryset=queryset, repd_period=request.POST.get('repd_period'))
+        queryset2 = DatabaseCredentials.objects.last()
         pd_pl_list = request.session.get('pd_plist')
+
         for pd_pl_name, pd_pl_code in pd_pl_list.items():
-            pd_df_list[pd_pl_name] = pd_calculator(queryset2, values[0], pd_pl_code, repd_start,
-                                                   repd_end)
-        # print('tut budet to wto nado')
-        # print(pd_df_list['consumer'][0])
-        # print(pd_df_list['consumer'][1])
-        # for i in PLIST_GLOBS.values():
-        #     pd_df_list.append(pd_calculator(db_credentials, values[0], i, repd_start, repd_end))
-        pd_json_list_show = {}
-        pd_json_list = {}
-        for i, j in pd_df_list.items():
-            pd_json_list_show[i] = [json.loads(df.reset_index().to_json(orient='records', date_format='iso')) for df in
-                                    j]
-            pd_json_list[i] = [df.to_json(orient='index') for df in j]
-        # for i, j in pd_df_list.items():
-        #     pd_json_list[i] = [df.to_json(orient='index') for df in j]
+            pd_obj = PD(queryset2, pd_pl_code, repd_start, repd_end)
+            pd_df_list[pd_pl_name] = pd_obj.calculate_metric()
 
-        '''
-        {
-        'concumer': [data1, data2],
-        fsfsdf
-        }
-        '''
-        # print(pd_json_list_show['consumer'][0])
-        # print(pd_json_list_show['consumer'][1])
+        pd_json_list, pd_json_list_show = PD.convert_data_to_json(pd_df_list)
         request.session['pd_data_dict'] = pd_json_list
-        # print(request.session.get('pd_data_dict'))
-        # print('-' * 30)
-        # print(pd_json_list['consumer'][0])
-        # print('-' * 30)
-        # # dataframe1 = pd.DataFrame.from_dict(pd_json_list['consumer'][0], orient="records")
-        # dataframe2 = pd.read_json(pd_json_list['consumer'][0], orient='index')
-        # # print(dataframe1)
-        # print(dataframe2)
-        # smth = pd.to_datetime(dataframe2.ACT_DATE, unit='ms')
-        # print('here is smth')
-        # print(smth)
-        # dataframe2['ACT_DATE'] = smth
-        # print(dataframe2)
-
-        # print(pd_df_list)
-        # pd_df_1dlist = list(chain.from_iterable(pd_df_list))
-        # pd_df_1dlist_html = [pd_df.to_html() for pd_df in pd_df_1dlist]
-        # pd_jsons = [json.loads(df.reset_index().to_json(orient ='records')) for df in pd_df_1dlist]
-        # df_html = pd_df_list[0][0].to_html()
-
         context = {'pd_json_list': pd_json_list_show}
-        # context = {'pd_df_list': pd_df_list}
         return render(request, 'irfs/pd.html', context=context)
-
-
-        # return HttpResponse(df_html)
     else:
-        # pd_list = Plist.objects.filter(measure='pd')
         pd_list = PLIST_GLOBS
         return render(request, 'irfs/pd.html', context={'pd_list': pd_list})
 
@@ -460,7 +370,6 @@ def ecl(request):
     if request.method == 'POST':
         # db_credentials = {key: value for key, value in DatabaseCredentials.objects.values()[0].items() if key != 'id'}
         portfolio = mehsul_adding(DatabaseCredentials.objects.filter(username=username)[0], PLIST_GLOBS)
-
 
         print(request.POST)
         print(request.POST.getlist('pd_list'))

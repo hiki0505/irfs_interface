@@ -11,7 +11,7 @@ from .config import database_table_name
 from .services import get_ifrs_data
 
 
-def lgd_calculator(db_credentials, ifrs_creds, plist, act_date):
+def lgd_calculator(db_credentials, plist, act_date):
     # conn = co.connect(
     #     u'{}/{}@{}/{}'.format(db_credentials['username'], db_credentials['password'], db_credentials['host'],
     #                           db_credentials['dbname']))

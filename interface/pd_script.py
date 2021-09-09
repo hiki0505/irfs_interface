@@ -19,7 +19,7 @@ from .services import get_ifrs_data
 # import dill
 # import pickle
 
-def pd_calculator(db_credentials, ifrs_creds, plist, repd_start, repd_end):
+def pd_calculator(db_credentials, plist, repd_start, repd_end):
     conn = co.connect(
         u'{}/{}@{}/{}'.format(db_credentials.username, db_credentials.password, db_credentials.host,
                               db_credentials.dbname))
