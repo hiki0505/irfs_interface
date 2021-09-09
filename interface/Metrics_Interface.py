@@ -40,7 +40,7 @@ class PD(MetricsCalculator):
         super().__init__(db_credentials)
         self.plist = plist
         self.repd_end = repd_end
-        self.repd_start = repd_start
+        self.repd_start = repd_st   art
 
     @classmethod
     def repd_period(cls, queryset, repd_period):
